@@ -1,0 +1,31 @@
+#!/bin/bash
+###########################################################
+# Copyright (c) 2015, Blockbridge Networks LLC.  All rights reserved.
+# Use of this source code is governed by a BSD-style license, found
+# in the LICENSE file.
+#
+# Blockbridge docker volume plugin
+###########################################################
+
+###########################################################
+# Required parameters
+###########################################################
+: ${BLOCKBRIDGE_API_HOST="srust-dev2"}
+: ${BLOCKBRIDGE_API_KEY="1/9NqH7BV3OUsaIZOhA+w07TyuvZWnmfpuhATKJg2+xlTk2ofsFXczCg"}
+
+###########################################################
+# run blockbridge docker volume plugin
+###########################################################
+docker rm -fv blockbridge-volume-driver
+
+docker run --name blockbridge-volume-driver                             \
+           --detach                                                     \
+           --restart always                                             \
+           --volume /bb/env:/bb/env                                     \
+           --volume /run/docker/plugins/blockbridge:/run/docker/plugins/blockbridge   \
+           --volume /run/docker.sock:/run/docker.sock                   \
+           -e BLOCKBRIDGE_API_HOST=$BLOCKBRIDGE_API_HOST                \
+           -e BLOCKBRIDGE_API_KEY=$BLOCKBRIDGE_API_KEY                  \
+           blockbridge/volume-driver
+
+docker logs -f blockbridge-volume-driver
