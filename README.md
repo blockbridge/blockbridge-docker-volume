@@ -20,9 +20,11 @@ git clone https://github.com/blockbridge/blockbridge-docker-volume.git
 cd blockbridge-docker-volume
 ````
 
+The volume driver is available to run directly from the Docker hub registry. The script to run the driver is included here.
+
 ## Driver Configuration
 
-The volume driver needs to be configured with an API backend host, and a `system` API token.
+The volume driver needs to be configured with a Blockbridge API backend host, and a `system` API token.
 
 If using the Blockbridge simulator container, retrieve the IP address and API
 key from the management node:
@@ -49,47 +51,51 @@ Once configured, start the driver:
 bin/blockbridge-docker-volume
 ````
 
+The Blockbridge volume driver should now be running:
+````
+# docker ps
+CONTAINER ID        IMAGE                       COMMAND                CREATED              STATUS              PORTS                                      NAMES
+f9bba845cc12        blockbridge/volume-driver   "./volume-driver"      About a minute ago   Up About a minute                                              blockbridge-volume-driver
+````
+
 ## Volume Configuration
 
-Each volume can specify unique attributes, capacity, a user, and a type of
-volume in an environment files. By default, these files are located in
-`/bb/env` and the name of the file must match the name of the volume being
-created.
+In order to use a Blockbridge volume in a container it must be configured via an environment configuration file. By default, these files are located in`/bb/env` and the name of the file must match the name of the volume being used. Each volume configuration file specifies the type of volume, capacity, user/account to provision for, and unique volume attributes. 
 
-Each volume environment file has at least the following settings:
+This configuration is specified in the file with the following settings:
 
     TYPE, USER, CAPACITY, ATTRIBUTES
 
-* `TYPE`: the type of storage container for the volume. This can currently either
-by `autovol` or `snappy`.
-* `USER`: a blockbridge username/account to provision the volume for
+* `TYPE`: the type of Blockbridge storage container for this volume. This can currently either
+be `autovol` or `snappy`. See below for description of the Blockbridge Storage as a Container types.
+* `USER`: a Blockbridge username/account to provision the volume for.
 * `CAPACITY`: the capacity of the volume. This can be specified with units, such as
 32GiB.
 * `ATTRIBUTES`: storage attributes for the volume. These user defined attributes
-are set on the blockbridge datastore, and determines the what kind of storage,
-or what location to provision from. This can include tags such as "+ssd,
+are set on the blockbridge datastore, and determines what kind of storage to provision, what location to provision from, rack, datacenter, etc. This can include tags such as "+ssd,
 "+us-east-1c" to include, or "-production" to exclude. This field can be left
 blank, and the default provisioning algorithm is used.
 
-For example, let's create an env file for a volume for a busybox container
+For example, let's create a configuration file for a volume for a busybox container.
 
 `/bb/env/busybox-demo`:
 ````
 TYPE=autovol
 USER=busybox
 CAPACITY=32GiB
-ATTRIBUTES=+ssd
 ````
 
 ## Start a container with a Blockbridge volume
 
-Start the busybox container wth a data volume that was just configured:
+Start the busybox container with the data volume that was just configured:
 
 ````
 docker run --rm -ti busybox-demo:/data --volume-driver=blockbridge busybox sh
 ````
 
-And the volume is mounted on /data in the container:
+The volume name `busybox-demo` is the unique volume name. This name must match the congiruation file name in `/bb/env`, and is considered a unique volume to Docker.
+
+After `busybox` loads, the volume is mounted on `/data` in the container:
 ````
 # df /data
 Filesystem           1K-blocks      Used Available Use% Mounted on
@@ -97,22 +103,49 @@ Filesystem           1K-blocks      Used Available Use% Mounted on
                       33537988     33312  33504676   0% /data
 ````
 
+You are now using Blockbridge persistent, multi-tenant, secure storage for your Docker volumes!
+
 ## Blockbridge Storage
 
-The Blockbridge volume plugin uses Blockbridge Elastic Programmable Storage as
-the backend. For more information on Blockbridge, please visit
-[http://blockbridge.io/docker](http://blockbridge.io/docker).
+The Blockbridge volume plugin for Docker uses Blockbridge Elastic Programmable Storage as
+the backend. For more information on Blockbridge, please visit for more information:
+
+* [http://blockbridge.io/docker](http://blockbridge.io/docker)
+* [http://blockbridge.io](http://blockbridge.io)
 
 ## Blockbridge Storage Simulator
 
 Blockbridge storage is available as a simulator for trial and non-production
-use. The simulator also runs as a Docker container.
+use. The simulator also runs as a Docker container. This is an easy way to try out Blockbridge storage, and try out the Blockbridge volume plugin for Docker.
 
-See
+Please visit for more information:
+
 * [blockbridge-demo](https://github.com/blockbridge/blockbridge-demo)
 * [blockbridge-demo/simulator/README.md](https://github.com/blockbridge/blockbridge-demo/blob/master/simulator/README.md)
 
-for information on how to run a simulator for your platform.
+## Blockbridge Storage as a Container volume types
+
+### autovol
+
+The `autovol` storage container type is the basic Blockbridge storage container option, and provisons an "automatic volume". To use `autovol`, specify the TYPE in the volume env file:
+
+````
+TYPE=autovol
+```
+
+### snappy
+
+The `snappy` storage container type extends the `autovol` container by providing snapshot support. Periodic snapshots are taken of the volume, as configured. These snapshots are done with zero I/O.
+
+To use a `snappy` volume, specify the following options in the volume env file:
+
+```
+TYPE=snappy
+SNAPSHOT_INTERVAL_HOURS=1
+SNAPSHOT_INTERVAL_HISTORY=24
+```
+
+This configuration will take a snapshot once an hour, and retain the last 24 hours of snapshot history for the volume.
 
 ## Support
 
