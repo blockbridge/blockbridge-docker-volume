@@ -85,7 +85,7 @@ USER=busybox
 CAPACITY=32GiB
 ````
 
-If configured on the backend, specify provisioning attributes:
+If configured on the backend, specify provisioning attributes as desired:
 
 ````
 ATTRIBUTES=+ssd +us-east-1c -production
@@ -114,7 +114,9 @@ You are now using Blockbridge persistent, multi-tenant, secure storage for your 
 ## Blockbridge Storage
 
 The Blockbridge volume plugin for Docker uses Blockbridge Elastic Programmable Storage as
-the backend. For more information on Blockbridge, please visit for more information:
+the backend.
+
+Please visit for more information:
 
 * [http://blockbridge.io/docker](http://blockbridge.io/docker)
 * [http://blockbridge.io](http://blockbridge.io)
@@ -122,7 +124,7 @@ the backend. For more information on Blockbridge, please visit for more informat
 ## Blockbridge Storage Simulator
 
 Blockbridge storage is available as a simulator for trial and non-production
-use. The simulator also runs as a Docker container. This is an easy way to try out Blockbridge storage, and try out the Blockbridge volume plugin for Docker.
+use. The simulator also runs as a Docker container. This is an easy way to try out Blockbridge storage, and to try out the Blockbridge volume plugin for Docker.
 
 Please visit for more information:
 
@@ -152,6 +154,28 @@ SNAPSHOT_INTERVAL_HISTORY=24
 ```
 
 This configuration will take a snapshot once an hour, and retain the last 24 hours of snapshot history for the volume.
+
+## OPTIONAL: build the Blockbridge volume driver
+
+The Blockbridge volume driver is available on the Docker hub registry. If desired, it can also be built locally.
+
+Simply type:
+
+````
+make
+````
+
+And an updated image will be built and available. The script `bin/blockbridge-docker-volume` when run will stop and remove any existing driver, so can be run again to start the volume driver with the new image.
+
+````
+bin/blockbridge-docker-volume
+```
+
+## OPTIONAL: iscsid
+
+The Blockbridge volume driver uses and requires iSCSI, via the `blockbridge/iscsid` container. The `blockbridge/iscsid` container runs `iscsid`, and will conflict with the system iscsid if it is not disabled first. Either first disable any iscsid service on the client host first, or the following script can be run to disable it for you:
+
+* [blockbridge-demo/iscsid/disable-host-iscsid.sh](https://github.com/blockbridge/blockbridge-demo/blob/master/iscsid/disable-host-iscsid.sh)
 
 ## Support
 
