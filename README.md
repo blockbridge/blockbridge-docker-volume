@@ -96,7 +96,7 @@ ATTRIBUTES=+ssd +us-east-1c -production
 Start the busybox container with the data volume that was just configured:
 
 ````
-docker run --rm -ti busybox-demo:/data --volume-driver=blockbridge busybox sh
+docker run --rm -ti --volume busybox-demo:/data --volume-driver=blockbridge busybox sh
 ````
 
 The volume name `busybox-demo` is the unique volume name. This name must match the configuration file name in `/bb/env`, and is considered a unique volume to Docker.
