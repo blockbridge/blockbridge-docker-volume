@@ -85,6 +85,12 @@ USER=busybox
 CAPACITY=32GiB
 ````
 
+If configured on the backend, specify provisioning attributes:
+
+````
+ATTRIBUTES=+ssd +us-east-1c -production
+````
+
 ## Start a container with a Blockbridge volume
 
 Start the busybox container with the data volume that was just configured:
