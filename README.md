@@ -101,6 +101,8 @@ docker run --rm -ti busybox-demo:/data --volume-driver=blockbridge busybox sh
 
 The volume name `busybox-demo` is the unique volume name. This name must match the configuration file name in `/bb/env`, and is considered a unique volume to Docker.
 
+NOTE: the very first volume you use with the volume driver set to `blockbridge` may take slightly longer to load. This is due to images that don't yet exist locally being pulled down from Docker.
+
 After `busybox` loads, the volume is mounted on `/data` in the container:
 ````
 # df /data
