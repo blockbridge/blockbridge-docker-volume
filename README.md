@@ -99,7 +99,7 @@ Start the busybox container with the data volume that was just configured:
 docker run --rm -ti busybox-demo:/data --volume-driver=blockbridge busybox sh
 ````
 
-The volume name `busybox-demo` is the unique volume name. This name must match the congiruation file name in `/bb/env`, and is considered a unique volume to Docker.
+The volume name `busybox-demo` is the unique volume name. This name must match the configuration file name in `/bb/env`, and is considered a unique volume to Docker.
 
 After `busybox` loads, the volume is mounted on `/data` in the container:
 ````
