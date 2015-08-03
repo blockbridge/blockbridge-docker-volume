@@ -48,8 +48,14 @@ module Blockbridge
       end
       post do
         volume_create
-        volume_provision
-        volume_mkfs
+        begin
+          volume_provision
+          volume_mkfs
+        rescue
+          docker_exec("/bb/bb_remove") rescue nil
+          docker_remove(vol_name, volumes: true, force: true) rescue nil
+          raise
+        end
         {
           Err: nil,
         }
