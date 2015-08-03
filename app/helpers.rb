@@ -36,13 +36,18 @@ module Blockbridge
 
     def docker_run(name, opts, force: false, noop: false)
       begin
-        # create volume
+        # create container
+        logger.debug "docker: creating #{name} from #{opts['Image']}"
         cont = Docker::Container.create(opts.clone)
       rescue Docker::Error::NotFoundError
-        # image not found; create it then create volume
+        # image not found; pull it first 
+        logger.debug "#{opts['Image']} not found"
+        logger.debug "docker: pulling image #{opts['Image']}"
         Docker::Image.create('fromImage' => opts['Image'])
+        logger.debug "docker: creating #{name} from #{opts['Image']}"
         cont = Docker::Container.create(opts.clone)
       rescue Docker::Error::ConflictError
+        logger.debug "docker: #{name} already exists"
         return if noop
         raise if !force
 
@@ -61,6 +66,7 @@ module Blockbridge
     def docker_remove(name, volumes: false, force: false)
       # remove volume as gently as possible
       cont = Docker::Container.get(name)
+      logger.debug "docker: removing #{name}"
       cont.stop('timeout' => 10) rescue nil
       cont.kill('signal' => 'SIGINT') rescue nil
       cont.remove('v' => volumes, 'force' => force)
@@ -170,7 +176,7 @@ module Blockbridge
       }
 
       # create volume
-      docker_run(vol_name, volopts, force: true)
+      docker_run(vol_name, volopts)
       logger.info "#{vol_name} created"
     end
 

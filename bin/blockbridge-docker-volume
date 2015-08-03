@@ -14,8 +14,18 @@ LOGS=$1
 ###########################################################
 # Required parameters
 ###########################################################
-: ${BLOCKBRIDGE_API_HOST="<api-host>"}
-: ${BLOCKBRIDGE_API_KEY="<api-key"}
+: ${BLOCKBRIDGE_API_HOST="notset"}
+: ${BLOCKBRIDGE_API_KEY="notset"}
+
+if [[ -z "$BLOCKBRIDGE_API_HOST" || "$BLOCKBRIDGE_API_HOST" == "notset" ]]; then
+    echo "BLOCKBRIDGE_API_HOST is required but not set"
+    exit 1
+fi
+
+if [[ -z "$BLOCKBRIDGE_API_KEY" || "$BLOCKBRIDGE_API_KEY" == "notset" ]]; then
+    echo "BLOCKBRIDGE_API_KEY is requried but not set"
+    exit 1
+fi
 
 ###########################################################
 # Check for docker
