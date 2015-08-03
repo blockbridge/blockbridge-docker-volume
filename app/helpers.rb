@@ -80,6 +80,8 @@ module Blockbridge
     end
 
     def check_iscsid
+      return unless params[:Name]
+
       iscsi_opts = {
         'name' => 'iscsid',
         'Image' => 'blockbridge/iscsid',
