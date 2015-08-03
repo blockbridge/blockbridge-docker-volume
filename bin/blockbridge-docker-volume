@@ -37,7 +37,7 @@ fi
 # Check for iscsid
 ###########################################################
 ISCSID=$(ps ax | grep iscsid | grep -v grep)
-if [ -n "$ISCSID" ]; then
+if [[ -n "$ISCSID" && ! "$ISCSID" =~ "/bb/iscsid" ]]; then
     echo "$ISCSID"
     echo
     echo "Found running 'iscsid'. The system iscsid is incompatible with the Blockbridge volume driver."
