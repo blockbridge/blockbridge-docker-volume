@@ -14,6 +14,22 @@
 : ${BLOCKBRIDGE_API_KEY="1/9NqH7BV3OUsaIZOhA+w07TyuvZWnmfpuhATKJg2+xlTk2ofsFXczCg"}
 
 ###########################################################
+# Check for docker
+###########################################################
+VERSION=$(docker version -f '{{.Client.Version}}' 2>&1)
+if [ $? -ne 0 ]; then
+    echo "Unable to determine docker version. Make sure docker 1.8.0+ is installed."
+    echo "$(docker version)"
+    exit 1
+fi
+
+if [[ ! "$VERSION" =~ "1.8" ]]; then
+    echo "Docker 1.8.0+ version not found. Please upgrade to docker 1.8.0+."
+    echo "$(docker version)"
+    exit 1
+fi
+
+###########################################################
 # run blockbridge docker volume plugin
 ###########################################################
 docker rm -fv blockbridge-volume-driver
