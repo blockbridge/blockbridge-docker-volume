@@ -1,13 +1,15 @@
 # Blockbridge Volume Plugin for Docker
 
 The Blockbridge volume plugin for Docker provides access to an extensible set
-of container-based persistent storage options for single and multi-host Docker
+of container-based persistent storage options. It supports single and multi-host Docker
 environments with features that include tenant isolation, automated
 provisioning, encryption, secure deletion, snapshots and QoS.
 
 This volume plugin requires Blockbridge Elastic Programmable Storage as the
 storage backend. To use a Blockbridge storage simulator, or for more
 information about Blockbridge see below.
+
+Docker 1.8+ is required to use the volume plugin.
 
 ## Installation
 
