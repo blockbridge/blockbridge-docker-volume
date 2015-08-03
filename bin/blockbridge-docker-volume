@@ -34,6 +34,20 @@ if [[ ! "$VERSION" =~ "1.8" ]]; then
 fi
 
 ###########################################################
+# Check for iscsid
+###########################################################
+ISCSID=$(ps ax | grep iscsid | grep -v grep)
+if [ -n "$ISCSID" ]; then
+    echo "$ISCSID"
+    echo
+    echo "Found running 'iscsid'. The system iscsid is incompatible with the Blockbridge volume driver."
+    echo "Please run the following script to disable it first:"
+    echo
+    echo "https://github.com/blockbridge/blockbridge-demo/blob/master/iscsid/disable-host-iscsid.sh"
+    exit 1
+fi
+
+###########################################################
 # run blockbridge docker volume plugin
 ###########################################################
 docker rm -fv blockbridge-volume-driver >/dev/null 2>&1
