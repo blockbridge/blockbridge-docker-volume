@@ -36,7 +36,7 @@ fi
 ###########################################################
 # run blockbridge docker volume plugin
 ###########################################################
-docker rm -fv blockbridge-volume-driver
+docker rm -fv blockbridge-volume-driver >/dev/null 2>&1
 
 docker run --name blockbridge-volume-driver                             \
            --detach                                                     \

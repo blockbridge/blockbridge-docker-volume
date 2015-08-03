@@ -11,7 +11,7 @@ require 'helpers'
 
 module Blockbridge
   class VolumeDriverAPI < Grape::API
-    version 'v1', using: :header, vendor: 'docker.plugins'
+    #version 'v1', using: :header, vendor: 'docker.plugins'
     format :json
     default_format :json
 
