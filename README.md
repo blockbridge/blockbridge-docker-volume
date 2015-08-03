@@ -7,7 +7,7 @@ provisioning, encryption, secure deletion, snapshots and QoS.
 
 This volume plugin requires Blockbridge Elastic Programmable Storage as the
 storage backend. To use a Blockbridge storage simulator, or for more
-information about Blockbridge see below.
+information about Blockbridge, see below.
 
 Docker 1.8+ is required to use the volume plugin.
 
@@ -169,7 +169,7 @@ Simply type:
 make
 ````
 
-And an updated image will be built and available. The script `bin/blockbridge-docker-volume` when run will stop and remove any existing driver, so can be run again to start the volume driver with the new image.
+And an updated image will be built and available. The script `bin/blockbridge-docker-volume` when run will stop and remove any currently running driver, so can be run again to start the volume driver with the new image.
 
 ````
 bin/blockbridge-docker-volume
@@ -177,7 +177,7 @@ bin/blockbridge-docker-volume
 
 ## OPTIONAL: iscsid
 
-The Blockbridge volume driver uses and requires iSCSI, via the `blockbridge/iscsid` container. The `blockbridge/iscsid` container runs `iscsid`, and will conflict with the system iscsid if it is not disabled first. Either first disable any iscsid service on the client host first, or the following script can be run to disable it for you:
+The Blockbridge volume driver uses and requires iSCSI, via the `blockbridge/iscsid` container. The `blockbridge/iscsid` container runs `iscsid`, and will conflict with the system iscsid if it is not disabled first. Either first disable any iscsid service on the client host, or the following script can be run to disable it for you:
 
 * [blockbridge-demo/iscsid/disable-host-iscsid.sh](https://github.com/blockbridge/blockbridge-demo/blob/master/iscsid/disable-host-iscsid.sh)
 
