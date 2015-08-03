@@ -5,13 +5,17 @@
 # in the LICENSE file.
 #
 # Blockbridge docker volume plugin
+#
+# Options:
+#   [logs] tail logs after running
 ###########################################################
+LOGS=$1
 
 ###########################################################
 # Required parameters
 ###########################################################
-: ${BLOCKBRIDGE_API_HOST="srust-dev2"}
-: ${BLOCKBRIDGE_API_KEY="1/9NqH7BV3OUsaIZOhA+w07TyuvZWnmfpuhATKJg2+xlTk2ofsFXczCg"}
+: ${BLOCKBRIDGE_API_HOST="<api-host>"}
+: ${BLOCKBRIDGE_API_KEY="<api-key"}
 
 ###########################################################
 # Check for docker
@@ -19,13 +23,13 @@
 VERSION=$(docker version -f '{{.Client.Version}}' 2>&1)
 if [ $? -ne 0 ]; then
     echo "Unable to determine docker version. Make sure docker 1.8.0+ is installed."
-    echo "$(docker version)"
+    command -v docker && echo "$(docker version)"
     exit 1
 fi
 
 if [[ ! "$VERSION" =~ "1.8" ]]; then
     echo "Docker 1.8.0+ version not found. Please upgrade to docker 1.8.0+."
-    echo "$(docker version)"
+    command -v docker && echo "$(docker version)"
     exit 1
 fi
 
@@ -44,4 +48,9 @@ docker run --name blockbridge-volume-driver                             \
            -e BLOCKBRIDGE_API_KEY=$BLOCKBRIDGE_API_KEY                  \
            blockbridge/volume-driver
 
-docker logs -f blockbridge-volume-driver
+###########################################################
+# tail logs if specified
+###########################################################
+if [ -n "$LOGS" ]; then
+    docker logs -f blockbridge-volume-driver
+fi
