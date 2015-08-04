@@ -2,11 +2,9 @@
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 
-require 'grape'
-require 'json'
 require 'goliath'
+require 'grape'
 require 'docker'
-require 'pp'
 require 'helpers'
 
 module Blockbridge
@@ -16,12 +14,10 @@ module Blockbridge
     default_format :json
 
     rescue_from :all do |e|
-      pp e.backtrace
-      msg = "#{e.message.chomp}"
-      env.logger.error msg
-      error!({
-        Err: msg,
-      })
+      msg = e.message.chomp.squeeze("\n")
+      msg.each_line do |m| env.logger.error(m.chomp) end
+      e.backtrace.each do |b| env.logger.error(b) end
+      error!(Err: msg)
     end
 
     before do
@@ -52,8 +48,7 @@ module Blockbridge
           volume_provision
           volume_mkfs
         rescue
-          docker_exec("/bb/bb_remove") rescue nil
-          docker_remove(vol_name, volumes: true, force: true) rescue nil
+          volume_create_fail
           raise
         end
         {
@@ -141,11 +136,6 @@ module Blockbridge
 
     # docker api version
     Docker.validate_version!
-
-    # trap signals
-    #Signal.trap("TERM") do
-      #shutdown
-    #end
 
     # process api call
     def response(env)

@@ -81,7 +81,7 @@ module Blockbridge
       # exec
       out, err, sts = cont.exec(cmd.split)
       if sts != 0
-        raise "#{vol_name} exec failed: #{cmd}: #{out} #{err}"
+        raise "#{vol_name} exec failed: #{cmd}: #{(out + err).join("\n")}"
       end
     end
 
@@ -178,6 +178,11 @@ module Blockbridge
       # create volume
       docker_run(vol_name, volopts)
       logger.info "#{vol_name} created"
+    end
+
+    def volume_create_fail
+      docker_exec("/bb/bb_remove") rescue nil
+      docker_remove(vol_name, volumes: true, force: true) rescue nil
     end
 
     def volume_remove
