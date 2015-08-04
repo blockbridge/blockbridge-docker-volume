@@ -4,7 +4,7 @@
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 #
-# Blockbridge docker volume plugin
+# Run the Blockbridge docker volume plugin
 #
 # Options:
 #   [logs] tail logs after running
@@ -23,7 +23,7 @@ if [[ -z "$BLOCKBRIDGE_API_HOST" || "$BLOCKBRIDGE_API_HOST" == "notset" ]]; then
 fi
 
 if [[ -z "$BLOCKBRIDGE_API_KEY" || "$BLOCKBRIDGE_API_KEY" == "notset" ]]; then
-    echo "BLOCKBRIDGE_API_KEY is requried but not set"
+    echo "BLOCKBRIDGE_API_KEY is required but not set"
     exit 1
 fi
 
