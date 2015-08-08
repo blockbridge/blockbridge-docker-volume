@@ -6,12 +6,10 @@
 # Validate environment parameters
 : ${BLOCKBRIDGE_API_HOST:?"not set"}
 : ${BLOCKBRIDGE_API_KEY:?"not set"}
-: ${BLOCKBRIDGE_MNT_ROOT="/bb/mnt"}
-: ${BLOCKBRIDGE_ENV_ROOT="/bb/env"}
+: ${BLOCKBRIDGE_ROOT="/bb"}
 
-export BLOCKBRIDGE_MNT_ROOT
-export BLOCKBRIDGE_ENV_ROOT
+export BLOCKBRIDGE_ROOT
 export RUBYLIB="$RUBYLIB:app"
 
 # run blockbridge volume driver
-exec ruby -rbundler/setup app/volume.rb -S /run/docker/plugins/blockbridge/blockbridge.sock -sv
+exec ruby -rbundler/setup app/volume.rb -S /run/docker/plugins/blockbridge/blockbridge.sock

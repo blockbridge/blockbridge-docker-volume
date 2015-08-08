@@ -31,9 +31,8 @@ module Blockbridge
     resource 'Plugin.Activate' do
       desc "Activate Volume Driver"
       post do
-        {
-          Implements: ["VolumeDriver"]
-        }
+        body(Implements: ["VolumeDriver"])
+        unref_all
       end
     end
 
@@ -43,17 +42,11 @@ module Blockbridge
         requires :Name, type: String, desc: "Volume Name"
       end
       post do
-        volume_create
-        begin
-          volume_provision
-          volume_mkfs
-        rescue
-          volume_create_fail
-          raise
+        synchronize do
+          body(Err: nil)
+          volume_create
+          volume_ref
         end
-        {
-          Err: nil,
-        }
       end
     end
 
@@ -63,10 +56,11 @@ module Blockbridge
         requires :Name, type: String, desc: "Volume Name"
       end
       post do
-        volume_remove
-        {
-          Err: nil,
-        }
+        synchronize do
+          body(Err: nil)
+          volume_remove
+          volume_unref
+        end
       end
     end
 
@@ -76,12 +70,11 @@ module Blockbridge
         requires :Name, type: String, desc: "Volume Name"
       end
       post do
-        volume_attach
-        volume_mount
-        {
-          Mountpoint: mnt_path,
-          Err: nil,
-        }
+        synchronize do
+          body(Mountpoint: mnt_path, Err: nil)
+          mount_ref
+          volume_mount
+        end
       end
     end
 
@@ -91,10 +84,7 @@ module Blockbridge
         requires :Name, type: String, desc: "Volume Name"
       end
       post do
-        {
-          Mountpoint: mnt_path,
-          Err: nil,
-        }
+        body(Mountpoint: mnt_path, Err: nil)
       end
     end
 
@@ -104,28 +94,12 @@ module Blockbridge
         requires :Name, type: String, desc: "Volume Name"
       end
       post do
-        volume_unmount
-        volume_detach
-        {
-          Err: nil,
-        }
+        synchronize do
+          body(Err: nil)
+          mount_unref
+          volume_unmount
+        end
       end
-    end
-  end
-
-  Goliath::Request.log_block = proc do |env, response, elapsed_time|
-    env.logger.debug do
-      full_uri = env['PATH_INFO']
-      if (query_string = env['QUERY_STRING']) && !query_string.empty?
-        full_uri += "?" + query_string
-      end
-  
-      "#{env['HTTP_X_FORWARDED_FOR'] || env['REMOTE_ADDR'] || '-'} " \
-      "#{env['REMOTE_USER'] || '-'} " \
-      "\"#{env['REQUEST_METHOD']} #{full_uri} #{env['HTTP_VERSION']}\" " \
-      "#{response.status} " \
-      "#{response.headers['Content-Length'] || '-'} " \
-      "[#{"%.2f" % elapsed_time}ms]"
     end
   end
 
@@ -142,4 +116,44 @@ module Blockbridge
       Blockbridge::VolumeDriverAPI.call(env)
     end
   end
+
+  Goliath::Request.log_block = proc do |env, response, elapsed_time|
+    env.logger.debug do
+      full_uri = env['PATH_INFO']
+      if (query_string = env['QUERY_STRING']) && !query_string.empty?
+        full_uri += "?" + query_string
+      end
+    
+      "#{env['HTTP_X_FORWARDED_FOR'] || env['REMOTE_ADDR'] || '-'} " \
+      "#{env['REMOTE_USER'] || '-'} " \
+      "\"#{env['REQUEST_METHOD']} #{full_uri} #{env['HTTP_VERSION']}\" " \
+      "#{response.status} " \
+      "#{response.headers['Content-Length'] || '-'} " \
+      "[#{"%.2f" % elapsed_time}ms]"
+    end
+  end
+
+  class Logger < Log4r::Logger
+    def initialize(name)
+      super(name)
+      pattern = "%d %-7l %c -- %m\n"
+      datefmt = "%Y-%m-%dT%H:%M:%S.%3N"
+      format  = Log4r::PatternFormatter.new(pattern: pattern, date_pattern: datefmt)
+      stdout  = Log4r::StdoutOutputter.new('console', :formatter => format)
+      add(stdout)
+    end
+  end
+
+  class Runner < Goliath::Runner
+    def initialize
+      super(ARGV, nil)
+      @api    = Blockbridge::VolumeDriver.new
+      @app    = Goliath::Rack::Builder.build(Blockbridge::VolumeDriver, api)
+      @logger = Blockbridge::Logger.new('blockbridge')
+    end
+  end
 end
+
+runner = Blockbridge::Runner.new
+runner.run
+exit 0

@@ -60,16 +60,18 @@ fi
 ###########################################################
 # run blockbridge docker volume plugin
 ###########################################################
-docker rm -fv blockbridge-volume-driver >/dev/null 2>&1
+docker rm -f blockbridge-volume-driver >/dev/null 2>&1
 
-docker run --name blockbridge-volume-driver                             \
-           --detach                                                     \
-           --restart always                                             \
-           --volume /bb/env:/bb/env                                     \
-           --volume /run/docker/plugins/blockbridge:/run/docker/plugins/blockbridge   \
-           --volume /run/docker.sock:/run/docker.sock                   \
-           -e BLOCKBRIDGE_API_HOST=$BLOCKBRIDGE_API_HOST                \
-           -e BLOCKBRIDGE_API_KEY=$BLOCKBRIDGE_API_KEY                  \
+docker run --name blockbridge-volume-driver                                             \
+           --detach                                                                     \
+           --restart always                                                             \
+           --hostname $(hostname)                                                       \
+           --volume blockbridge-volumes:/bb                                             \
+           --volume /bb/env:/bb/env                                                     \
+           --volume /run/docker/plugins/blockbridge:/run/docker/plugins/blockbridge     \
+           --volume /run/docker.sock:/run/docker.sock                                   \
+           -e BLOCKBRIDGE_API_HOST=$BLOCKBRIDGE_API_HOST                                \
+           -e BLOCKBRIDGE_API_KEY=$BLOCKBRIDGE_API_KEY                                  \
            blockbridge/volume-driver
 
 ###########################################################
