@@ -83,7 +83,7 @@ For example, let's create a configuration file for a volume for a busybox contai
 `/bb/env/busybox-demo`:
 ````
 TYPE=autovol
-USER=busybox
+USER=block
 CAPACITY=32GiB
 ````
 
