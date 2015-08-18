@@ -68,8 +68,8 @@ docker run --name blockbridge-volume-driver                                     
            --hostname $(hostname)                                                       \
            --volume blockbridge-volumes:/bb                                             \
            --volume /bb/env:/bb/env                                                     \
-           --volume /run/docker/plugins/blockbridge:/run/docker/plugins/blockbridge     \
-           --volume /run/docker.sock:/run/docker.sock                                   \
+           --volume /var/run/docker/plugins/blockbridge:/run/docker/plugins/blockbridge \
+           --volume /var/run/docker.sock:/run/docker.sock                               \
            -e BLOCKBRIDGE_API_HOST=$BLOCKBRIDGE_API_HOST                                \
            -e BLOCKBRIDGE_API_KEY=$BLOCKBRIDGE_API_KEY                                  \
            blockbridge/volume-driver
