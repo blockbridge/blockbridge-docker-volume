@@ -2,158 +2,87 @@
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 
-require 'goliath'
-require 'grape'
-require 'docker'
-require 'helpers'
-
 module Blockbridge
-  class VolumeDriverAPI < Grape::API
-    #version 'v1', using: :header, vendor: 'docker.plugins'
-    format :json
-    default_format :json
+  module Volume
+    def volume_env
+      env = { 
+        "BB_MANUAL_MODE"             => "1",
+        "LABEL"                      => vol_name,
+        "BLOCKBRIDGE_VOLUME_NAME"    => vol_name,
+        "BLOCKBRIDGE_VOLUME_TYPE"    => vol_type,
+        "BLOCKBRIDGE_VOLUME_PATH"    => vol_path,
+        "BLOCKBRIDGE_MOUNT_PATH"     => mnt_path,
+        "BLOCKBRIDGE_MODULES_EXPORT" => "1",
+        "BLOCKBRIDGE_API_KEY"        => api_token,
+        "BLOCKBRIDGE_API_HOST"       => api_host,
+        "BLOCKBRIDGE_API_SU"         => vol_user,
+      }
 
-    rescue_from :all do |e|
-      msg = e.message.chomp.squeeze("\n")
-      msg.each_line do |m| env.logger.error(m.chomp) end
-      e.backtrace.each do |b| env.logger.error(b) end
-      error!(Err: msg)
-    end
-
-    before do
-      status 200
-      check_name
-      check_iscsid
-    end
-
-    helpers Blockbridge::Helpers
-
-    resource 'Plugin.Activate' do
-      desc "Activate Volume Driver"
-      post do
-        body(Implements: ["VolumeDriver"])
-        unref_all
-      end
-    end
-
-    resource 'VolumeDriver.Create' do
-      desc "Create a Volume"
-      params do
-        requires :Name, type: String, desc: "Volume Name"
-      end
-      post do
-        synchronize do
-          body(Err: nil)
-          volume_create
-          volume_ref
+      File.foreach(env_file).map do |line|
+        line.chomp!
+        next if line.match('^#')
+        k, v = line.split('=')
+        if k != "USER" && k != "TYPE"
+          env["#{k}"] = "#{v}"
         end
       end
+      env
     end
 
-    resource 'VolumeDriver.Remove' do
-      desc "Remove a Volume"
-      params do
-        requires :Name, type: String, desc: "Volume Name"
+    def volume_create
+      logger.info "#{vol_name} creating..."
+      volume_provision
+      volume_mkfs
+      volume_ref
+      logger.info "#{vol_name} created"
+    rescue
+      cmd_exec("bb_remove") rescue nil
+      raise
+    end
+
+    def volume_remove
+      if !volume_needed?
+        logger.info "#{vol_name} removing..."
+        cmd_exec("bb_remove")
+        logger.info "#{vol_name} removed"
       end
-      post do
-        synchronize do
-          body(Err: nil)
-          volume_remove
-          volume_unref
-        end
+      volume_unref
+    end
+
+    def volume_provision
+      logger.info "#{vol_name} provisioning if needed..."
+      cmd_exec("bb_provision")
+      logger.info "#{vol_name} provisioned"
+    end
+
+    def volume_mkfs
+      begin
+        cmd_exec("bb_mkfs")
+      rescue
+        logger.info "#{vol_name} formatting..."
+        cmd_exec("bb_attach")
+        cmd_exec("bb_mkfs")
+        cmd_exec("bb_detach")
+        logger.info "#{vol_name} formatted"
       end
     end
 
-    resource 'VolumeDriver.Mount' do
-      desc "Mount a Volume"
-      params do
-        requires :Name, type: String, desc: "Volume Name"
-      end
-      post do
-        synchronize do
-          body(Mountpoint: mnt_path, Err: nil)
-          mount_ref
-          volume_mount
-        end
-      end
+    def volume_mount
+      mount_ref
+      logger.info "#{vol_name} mounting if needed..."
+      cmd_exec("bb_attach")
+      cmd_exec("bb_mount")
+      logger.info "#{vol_name} mounted"
     end
 
-    resource 'VolumeDriver.Path' do
-      desc "Query path of a Volume"
-      params do
-        requires :Name, type: String, desc: "Volume Name"
-      end
-      post do
-        body(Mountpoint: mnt_path, Err: nil)
-      end
-    end
-
-    resource 'VolumeDriver.Unmount' do
-      desc "Unmount a Volume"
-      params do
-        requires :Name, type: String, desc: "Volume Name"
-      end
-      post do
-        synchronize do
-          body(Err: nil)
-          mount_unref
-          volume_unmount
-        end
-      end
-    end
-  end
-
-  class VolumeDriver < Goliath::API
-    use Goliath::Rack::Render # auto-negotiate response format
-    use Goliath::Rack::Params # parse & merge query and body parameters
-    use Goliath::Rack::Validation::RequestMethod, %w(POST) # allow POST requests only
-
-    # docker api version
-    Docker.validate_version!
-
-    # process api call
-    def response(env)
-      Blockbridge::VolumeDriverAPI.call(env)
-    end
-  end
-
-  Goliath::Request.log_block = proc do |env, response, elapsed_time|
-    env.logger.debug do
-      full_uri = env['PATH_INFO']
-      if (query_string = env['QUERY_STRING']) && !query_string.empty?
-        full_uri += "?" + query_string
-      end
-    
-      "#{env['HTTP_X_FORWARDED_FOR'] || env['REMOTE_ADDR'] || '-'} " \
-      "#{env['REMOTE_USER'] || '-'} " \
-      "\"#{env['REQUEST_METHOD']} #{full_uri} #{env['HTTP_VERSION']}\" " \
-      "#{response.status} " \
-      "#{response.headers['Content-Length'] || '-'} " \
-      "[#{"%.2f" % elapsed_time}ms]"
-    end
-  end
-
-  class Logger < Log4r::Logger
-    def initialize(name)
-      super(name)
-      pattern = "%d %-7l %c -- %m\n"
-      datefmt = "%Y-%m-%dT%H:%M:%S.%3N"
-      format  = Log4r::PatternFormatter.new(pattern: pattern, date_pattern: datefmt)
-      stdout  = Log4r::StdoutOutputter.new('console', :formatter => format)
-      add(stdout)
-    end
-  end
-
-  class Runner < Goliath::Runner
-    def initialize
-      super(ARGV, nil)
-      @api    = Blockbridge::VolumeDriver.new
-      @app    = Goliath::Rack::Builder.build(Blockbridge::VolumeDriver, api)
-      @logger = Blockbridge::Logger.new('blockbridge')
+    def volume_unmount
+      mount_unref
+      return if mount_needed?
+      logger.info "#{vol_name} unmounting..."
+      cmd_exec("bb_unmount")
+      cmd_exec("bb_detach")
+      logger.info "#{vol_name} unmounted"
     end
   end
 end
 
-runner = Blockbridge::Runner.new
-runner.run
-exit 0

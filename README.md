@@ -1,5 +1,7 @@
 # Blockbridge Volume Plugin for Docker
 
+Version 2.0
+
 The Blockbridge volume plugin for Docker provides access to an extensible set
 of container-based persistent storage options. It supports single and multi-host Docker
 environments with features that include tenant isolation, automated
@@ -177,7 +179,7 @@ bin/blockbridge-docker-volume
 
 ## OPTIONAL: iscsid
 
-The Blockbridge volume driver uses and requires iSCSI, via the `blockbridge/iscsid` container. The `blockbridge/iscsid` container runs `iscsid`, and will conflict with the system iscsid if it is not disabled first. Either first disable any iscsid service on the client host, or the following script can be run to disable it for you:
+The Blockbridge volume driver uses and requires iSCSI by running `iscsid`, and will conflict with the system iscsid if it is not disabled first. Either first disable any iscsid service on the client host, or the following script can be run to disable it for you:
 
 * [blockbridge-demo/iscsid/disable-host-iscsid.sh](https://github.com/blockbridge/blockbridge-demo/blob/master/iscsid/disable-host-iscsid.sh)
 

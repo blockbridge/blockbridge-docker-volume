@@ -16,6 +16,7 @@ LOGS=$1
 ###########################################################
 : ${BLOCKBRIDGE_API_HOST="notset"}
 : ${BLOCKBRIDGE_API_KEY="notset"}
+: ${BLOCKBRIDGE_ROOT="/bb"}
 
 if [[ -z "$BLOCKBRIDGE_API_HOST" || "$BLOCKBRIDGE_API_HOST" == "notset" ]]; then
     echo "BLOCKBRIDGE_API_HOST is required but not set"
@@ -46,8 +47,8 @@ fi
 ###########################################################
 # Check for iscsid
 ###########################################################
-ISCSID=$(ps ax | grep iscsid | grep -v grep)
-if [[ -n "$ISCSID" && ! "$ISCSID" =~ "/bb/iscsid" ]]; then
+ISCSID=$(ps ax | egrep '/usr/sbin/iscsid|/bb/bin/iscsid' | grep -v grep)
+if [[ -n "$ISCSID" && ! "$ISCSID" =~ "/bb/bin/iscsid" ]]; then
     echo "$ISCSID"
     echo
     echo "Found running 'iscsid'. The system iscsid is incompatible with the Blockbridge volume driver."
@@ -64,14 +65,19 @@ docker rm -f blockbridge-volume-driver >/dev/null 2>&1
 
 docker run --name blockbridge-volume-driver                                             \
            --detach                                                                     \
+           --privileged                                                                 \
            --restart always                                                             \
            --hostname $(hostname)                                                       \
-           --volume blockbridge-volumes:/bb                                             \
+           --volume /proc/1/ns:/ns-net                                                  \
+           --volume /proc/1/ns:/ns-mnt                                                  \
+           --volume /lib/modules:/lib/modules                                           \
+           --volume blockbridge-volumes:$BLOCKBRIDGE_ROOT/volumes                       \
            --volume /bb/env:/bb/env                                                     \
            --volume /var/run/docker/plugins/blockbridge:/run/docker/plugins/blockbridge \
            --volume /var/run/docker.sock:/run/docker.sock                               \
            -e BLOCKBRIDGE_API_HOST=$BLOCKBRIDGE_API_HOST                                \
            -e BLOCKBRIDGE_API_KEY=$BLOCKBRIDGE_API_KEY                                  \
+           -e BLOCKBRIDGE_ROOT=$BLOCKBRIDGE_ROOT                                        \
            blockbridge/volume-driver
 
 ###########################################################

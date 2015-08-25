@@ -1,7 +1,5 @@
-FROM ruby:2.1.6-onbuild
-
-# volume plugin directory
-RUN mkdir -p /run/docker/plugins/blockbridge
+FROM blockbridge/volume-driver-base:onbuild
+MAINTAINER docker@blockbridge.com
 
 # run volume driver
 CMD ["./volume-driver"]

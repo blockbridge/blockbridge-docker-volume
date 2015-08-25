@@ -73,6 +73,7 @@ GEM
     minitest (5.7.0)
     multi_json (1.9.3)
     multi_xml (0.5.5)
+    posix-spawn (0.3.11)
     rack (1.6.4)
     rack-accept (0.4.5)
       rack (>= 0.4)
@@ -100,6 +101,7 @@ DEPENDENCIES
   docker-api!
   goliath
   grape!
+  posix-spawn
 
 BUNDLED WITH
-   1.10.5
+   1.10.6
