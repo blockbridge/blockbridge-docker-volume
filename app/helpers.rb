@@ -151,7 +151,7 @@ module Blockbridge
         res.succeed(result)
       }
       EM.defer(nil, cb) do
-        child = POSIX::Spawn::Child.build(volume_env, *cmd, :timeout => 15)
+        child = POSIX::Spawn::Child.build(volume_env, *cmd, :timeout => 60)
         begin
           child.exec!
           {
