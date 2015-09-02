@@ -13,6 +13,10 @@ information about Blockbridge, see below.
 
 Docker 1.8+ is required to use the volume plugin.
 
+## Demo
+
+[![A closer look at docker volume plugins in action](https://cloud.githubusercontent.com/assets/5973862/9636759/2ca90888-516b-11e5-9e1e-b160abd30058.png)](http://www.blockbridge.com/a-closer-look-at-docker-volume-plugins-in-action/)
+
 ## Installation
 
 The Blockbridge volume plugin runs as a Docker container right alongside your
