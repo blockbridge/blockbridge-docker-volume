@@ -15,7 +15,7 @@ Docker 1.8+ is required to use the volume plugin.
 
 ## Demo
 
-[![A closer look at docker volume plugins in action](https://cloud.githubusercontent.com/assets/5973862/9636759/2ca90888-516b-11e5-9e1e-b160abd30058.png)](http://www.blockbridge.com/a-closer-look-at-docker-volume-plugins-in-action/)
+[![A closer look at docker volume plugins in action](https://cloud.githubusercontent.com/assets/5973862/9637035/84d5f6e6-516c-11e5-9656-46dcae410569.png)](http://www.blockbridge.com/a-closer-look-at-docker-volume-plugins-in-action/)
 
 ## Installation
 
