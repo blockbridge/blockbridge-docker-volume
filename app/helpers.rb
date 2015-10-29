@@ -23,7 +23,7 @@ module Blockbridge
     end
 
     def volumes_root
-      File.join(ENV['BLOCKBRIDGE_ROOT'], 'volumes')
+      @volumes_root ||= File.join(ENV['BLOCKBRIDGE_ROOT'], 'volumes')
     end
 
     def env_file
@@ -72,7 +72,7 @@ module Blockbridge
         next if line.match('^#')
         k, v = line.split('=')
         if k == "TYPE"
-          return v
+          return v.downcase
         end
       end
 

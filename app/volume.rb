@@ -31,8 +31,12 @@ module Blockbridge
 
     def volume_create
       logger.info "#{vol_name} creating..."
-      volume_provision
-      volume_mkfs
+      if vol_type == "autoclone"
+        volume_clone
+      else
+        volume_provision
+        volume_mkfs
+      end
       volume_ref
       logger.info "#{vol_name} created"
     rescue
@@ -40,10 +44,20 @@ module Blockbridge
       raise
     end
 
+    def volume_clone
+      logger.info "#{vol_name} cloning..."
+      cmd_exec("bb_clone")
+      logger.info "#{vol_name} cloned"
+    end
+
     def volume_remove
       if !volume_needed?
         logger.info "#{vol_name} removing..."
-        cmd_exec("bb_remove")
+        if vol_type == "autoclone"
+          cmd_exec("bb_remove", "-c")
+        else
+          cmd_exec("bb_remove")
+        end
         logger.info "#{vol_name} removed"
       end
       volume_unref
