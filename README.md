@@ -145,11 +145,24 @@ Please visit for more information:
 
 ### autovol
 
-The `autovol` storage container type is the basic Blockbridge storage container option, and provisons an "automatic volume". To use `autovol`, specify the TYPE in the volume env file:
+The `autovol` storage container type is the basic Blockbridge storage container option, and provisons an "automatic volume". To use `autovol`, specify the TYPE in the volume env file.
 
 ````
 TYPE=autovol
+USER=block
+CAPACITY=32GiB
 ```
+
+### autoclone
+
+The `autoclone` storage container type uses `thin clone` technology to clone a basis disk when the volume is created. Specify the disk basis, the snapshot to clone, and your `autoclone` volume is instaneously created as a thin layer. Use a golden image as a basis, and release across your clients in seconds.
+
+````
+TYPE=autoclone
+USER=block
+CLONE_BASIS=disk-1
+SNAPSHOT_TAG=latest
+````
 
 ### snappy
 
@@ -159,6 +172,8 @@ To use a `snappy` volume, specify the following options in the volume env file:
 
 ```
 TYPE=snappy
+USER=block
+CAPACITY=32GiB
 SNAPSHOT_INTERVAL_HOURS=1
 SNAPSHOT_INTERVAL_HISTORY=24
 ```
