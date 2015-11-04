@@ -20,26 +20,40 @@ LOGS=$1
 
 if [[ -z "$BLOCKBRIDGE_API_HOST" || "$BLOCKBRIDGE_API_HOST" == "notset" ]]; then
     echo "BLOCKBRIDGE_API_HOST is required but not set"
-    exit 1
+    setexit=1
 fi
 
 if [[ -z "$BLOCKBRIDGE_API_KEY" || "$BLOCKBRIDGE_API_KEY" == "notset" ]]; then
     echo "BLOCKBRIDGE_API_KEY is required but not set"
-    exit 1
+    setexit=1
 fi
 
+[ "$setexit" != "" ] && exit $setexit
+
 ###########################################################
-# Check for docker
+# Check for docker versions
 ###########################################################
-VERSION=$(docker version -f '{{.Client.Version}}' 2>&1)
+function vercmp()
+{
+    [ "$1" != "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
+}
+
+CLIENT_VERSION=$(docker version -f '{{.Client.Version}}' 2>&1)
 if [ $? -ne 0 ]; then
-    echo "Unable to determine docker version. Make sure docker 1.8.0+ is installed."
+    echo "Unable to determine docker client version. Make sure docker 1.8.0+ is installed."
     command -v docker && echo "$(docker version)"
     exit 1
 fi
 
-if [[ ! "$VERSION" =~ "1.8" ]]; then
-    echo "Docker 1.8.0+ version not found. Please upgrade to docker 1.8.0+."
+SERVER_VERSION=$(docker version -f '{{.Server.Version}}' 2>&1)
+if [ $? -ne 0 ]; then
+    echo "Unable to determine docker server version. Make sure docker 1.8.0+ is installed."
+    command -v docker && echo "$(docker version)"
+    exit 1
+fi
+
+if vercmp 1.8.0 $CLIENT_VERSION || vercmp 1.8.0 $SERVER_VERSION; then
+    echo "Docker version not supported. Please upgrade to docker 1.8.0+."
     command -v docker && echo "$(docker version)"
     exit 1
 fi
