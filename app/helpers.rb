@@ -26,16 +26,39 @@ module Blockbridge
       @volumes_root ||= File.join(ENV['BLOCKBRIDGE_ROOT'], 'volumes')
     end
 
+    def vol_name
+      @vol_name ||= params[:Name]
+    end
+
+    def env_name
+      @env_name ||= vol_name
+    end
+
+    def env_path
+      File.join(ENV['BLOCKBRIDGE_ROOT'], 'env', env_name)
+    end
+
+    def env_path_default
+      File.join(ENV['BLOCKBRIDGE_ROOT'], 'env', 'DEFAULT')
+    end
+
     def env_file
-      File.join(ENV['BLOCKBRIDGE_ROOT'], 'env', params[:Name])
+      @env_file ||=
+        begin
+          if File.exist?(env_path)
+            env_path
+          elsif File.exist?(env_path_default)
+            env_path_default
+          end
+        end
     end
 
     def mnt_path
-      File.join(ENV['BLOCKBRIDGE_ROOT'], 'mnt', params[:Name])
+      File.join(ENV['BLOCKBRIDGE_ROOT'], 'mnt', vol_name)
     end
 
     def vol_path
-      File.join(volumes_root, params[:Name])
+      File.join(volumes_root, vol_name)
     end
 
     def vol_ref_path
@@ -48,14 +71,6 @@ module Blockbridge
 
     def mnt_ref_file
       File.join(vol_ref_path, 'mnt')
-    end
-
-    def vol_name
-      params[:Name]
-    end
-
-    def vol_path
-      File.join(ENV['BLOCKBRIDGE_ROOT'], 'volumes', params[:Name])
     end
 
     def api_token
@@ -98,8 +113,8 @@ module Blockbridge
 
     def check_name
       return unless params[:Name]
-      return if File.exist?(env_file)
-      raise "Volume '#{params[:Name]}' is not configured; no parameters defined in #{env_file}"
+      return if env_file
+      raise "Volume '#{params[:Name]}' is not configured in #{env_file}; no '/bb/env/DEFAULT' configuration found."
     end
 
     def self.iscsid

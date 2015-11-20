@@ -76,8 +76,9 @@ module Blockbridge
         logger.info "#{vol_name} formatting..."
         cmd_exec("bb_attach")
         cmd_exec("bb_mkfs")
-        cmd_exec("bb_detach")
         logger.info "#{vol_name} formatted"
+      ensure
+        cmd_exec("bb_detach")
       end
     end
 
