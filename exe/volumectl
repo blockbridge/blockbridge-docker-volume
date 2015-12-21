@@ -1,0 +1,277 @@
+#!/usr/bin/env ruby
+# Copyright (c) 2015-2016, Blockbridge Networks LLC.  All rights reserved.
+# Use of this source code is governed by a BSD-style license, found
+# in the LICENSE file.
+
+require 'clamp'
+require 'multi_json'
+require 'restclient'
+require 'restclient/components'
+require 'uri'
+require 'excon'
+require 'pp'
+
+module Helpers
+  def machine?
+    !!(ENV['BLOCKBRIDGE_MACHINE_FORMAT'].to_i != 0 || ARGV.index('--machine'))
+  end
+
+  def debug?
+    !!(ENV['BLOCKBRIDGE_DEBUG'].to_i != 0 || ARGV.index('--debug'))
+  end
+
+  extend self
+end
+
+class Command < Clamp::Command
+  include Helpers
+
+  def execute
+    # wrap Clamp's 'execute' method to ensure any raised exceptions include
+    # the final resolved command instance object. this allows any state that
+    # was built up (e.g., while constructing api parameters) to be accessed
+    # in the exception handling code. most importantly, this makes
+    # generating pretty validation errors more-or-less automatic. (assuming
+    # proper 'apiopt' params are defined)
+    this_command_instance = self
+
+    begin
+      self.exec
+    rescue StandardError, Interrupt => e
+      # add a command_instance attribute to whatever excetion was thrown,
+      # and set it to the previously saved value of 'self'
+      e.class.class_eval { attr_accessor :command_instance }
+      e.command_instance = this_command_instance
+
+      # and re-raise the same exception
+      raise
+    end
+
+    # return self on success, too.
+    self
+  end
+
+  # global options
+  option('--machine', :flag, 'format output for machines')
+  option('--debug', :flag, 'enable additional debug')
+  option('--api-proto', 'PROTO', 'specify endpoint protocol', default: 'http')
+  option('--api-host', 'HOST', 'specify endpoint host', default: 'localhost')
+  option('--api-port', 'PORT', 'specify endpoint port', default: 27001)
+  option('--api-url', 'URL', 'specify endpoint url', attribute_name: :base_url)
+  option('--api-token', '', 'specify bearer token',
+         attribute_name: :bearer_auth)
+  option('-u', 'USER:PASS', 'specify username & password basic auth',
+         attribute_name: :basic_auth)
+  option('-k', :flag, 'ignore tls certificate errors',
+         attribute_name: :ignore_tls_errors)
+
+  def default_base_url
+    "#{api_proto}://#{api_host}:#{api_port}"
+  end
+
+  # client class
+  class Client
+    attr_reader :client
+
+    def initialize(prefix)
+      @client ||= Excon.new('unix:///', :socket => "/var/run/docker/plugins/blockbridge/blockbridge.sock",
+                            :headers => { 'Content-Type' => 'application/json' })
+      @prefix = prefix
+    end
+
+    def create(params)
+      req = request(:post, nil, params)
+      client.request(req).body
+    end
+
+    def delete(params)
+      req = request(:delete, params[:name], params)
+      client.request(req)
+    end
+
+    def info(params)
+      req = request(:get, params[:name], params)
+      client.request(req).body
+    end
+
+    def list
+      req = request(:get, nil, nil)
+      client.request(req).body
+    end
+
+    private
+
+    def request(method, path, body)
+      Hash.new.tap do |h|
+        h[:method] = method
+        h[:path] = "/#{@prefix}"
+        h[:path] += "/#{path}" if path
+        h[:body] = MultiJson.dump(body) if body
+        h[:expects] = (200..204).to_a << 304 << 400 << 404
+      end
+    end
+  end
+
+  # volume client
+  def volume_api
+    @volume_class ||= Client.new("volume")
+  end
+
+  # profile client
+  def profile_api
+    @profile_class ||= Client.new("profile")
+  end
+
+  # client run
+  def execute
+    format_results exec
+  end
+
+  def enum_check(val, options, fmt = nil)
+    unless options.index(val)
+      msg = (fmt || "must be one of: %s") % options.join(', ')
+      raise ArgumentError.new(msg)
+    end
+    val
+  end
+
+  def format_results(data)
+    return if data.nil? || data.empty?
+    data = MultiJson.load(data) if data.is_a?(String)
+    puts MultiJson.dump(data, pretty: true)
+  end
+end
+
+class CreateCommand < Command
+  option '--type', 'TYPE', 'volume type (autovol, autoclone, snappy)' do |val|
+    enum_check(val, %w(autovol autoclone snappy))
+  end
+  option '--user', 'USER', 'volume owner'
+  option '--capacity', 'CAPACITY', 'request volume capacity (bytes, N GiB, etc.)'
+  option '--iops', 'IOPS', 'requested service IOPS'
+  option '--clone-basis', 'CLONE-BASIS', '(autoclone) clone basis disk'
+  option '--snapshot-tag', 'SNAPSHOT-TAG', '(autoclone) clone basis disk snapshot tag'
+  option '--snapshot-interval-hours', 'SNAPSHOT-INTERVAL-HOURS', '(snappy) take snapshot every interval'
+  option '--snapshot-interval-history', 'SNAPSHOT-INTERVAL-HISTORY', '(snappy) snapshot retain count'
+
+  def default_type
+    'autovol' if user
+  end
+
+  def create_params
+    Hash.new.tap { |h|
+      h[:name]         = name 
+      h[:type]         = type
+      h[:user]         = user
+      h[:capacity]     = capacity
+      h[:iops]         = iops
+      h[:attributes]   = attributes.join(' ') if attributes.length > 0
+      h[:clone_basis]  = clone_basis
+      h[:snapshot_tag] = snapshot_tag
+      h[:snapshot_interval_hours] = snapshot_interval_hours
+      h[:snapshot_interval_history] = snapshot_interval_history
+    }.reject { |_, v| v.nil? }
+  end
+
+  def volume_create_params
+    create_params.tap { |h|
+      h[:profile] = profile
+    }.reject { |_, v| v.nil? }
+  end
+end
+
+class VolumeCreate < CreateCommand
+  option '--name', 'VOLUME', 'volume name', :required => true
+  option '--profile', 'PROFILE', 'storage profile'
+  parameter '[ATTRIBUTES] ...', 'provisioning attributes (+tag to include, -tag to exclude)', :attribute_name => :attributes
+
+  def exec
+    volume_api.create(volume_create_params)
+  end
+end
+
+class VolumeRemove < Command
+  option '--name', 'VOLUME', 'volume name', :required => true
+
+  def exec
+    volume_api.delete(name: name).body
+  end
+end
+
+class VolumeInfo < Command
+  option '--name', 'VOLUME', 'volume name'
+  def exec
+    volume_api.info(name: name)
+  end
+end
+
+class VolumeList < Command
+  def exec
+    volume_api.list
+  end
+end
+
+class VolumeCommand < Command
+  subcommand 'create', 'create a volume', VolumeCreate
+  subcommand 'remove', 'remove a volume', VolumeRemove
+  subcommand 'info', 'show info about a volume', VolumeInfo
+  subcommand ['list', 'ls'], 'show all volumes', VolumeList
+end
+
+class ProfileCreate < CreateCommand
+  option '--name', 'PROFILE', 'profile name', :required => true
+  parameter '[ATTRIBUTES] ...', 'provisioning attributes (+tag to include, -tag to exclude)', :attribute_name => :attributes
+
+  def exec
+    profile_api.create(create_params)
+  end
+end
+
+class ProfileRemove < Command
+  option '--name', 'PROFILE', 'profile name', :required => true
+
+  def exec
+    profile_api.delete(name: name).body
+  end
+end
+
+class ProfileUpdate < Command
+  def exec
+  end
+end
+
+class ProfileInfo < Command
+  option '--name', 'PROFILE', 'profile name'
+  def exec
+    profile_api.info(name: name)
+  end
+end
+
+class ProfileList < Command
+  def exec
+    profile_api.list
+  end
+end
+
+class ProfileCommand < Command
+  subcommand 'create', 'create a profile', ProfileCreate
+  subcommand 'update', 'update a profile', ProfileUpdate
+  subcommand 'remove', 'remove a profile', ProfileRemove
+  subcommand 'info', 'show info about a profile', ProfileInfo
+  subcommand ['list', 'ls'], 'list all profiles', ProfileList
+end
+
+class VolumeControl < Command
+  subcommand 'volume', 'manage volumes', VolumeCommand
+  subcommand 'profile', 'manage volume profiles', ProfileCommand
+end
+
+begin
+  VolumeControl.run
+rescue StandardError, Interrupt => e
+  if Helpers.debug?
+    STDERR.puts e.inspect, e.class, e.backtrace
+  end
+  abort(Helpers.machine? ? "#{e.class} #{e.message}" :
+          "Operation failed: #{e.message}")
+end

@@ -1,41 +1,104 @@
 # Blockbridge Volume Plugin for Docker
 
-Version 2.0
+Version 3.0
 
-The Blockbridge volume plugin for Docker provides access to an extensible set
-of container-based persistent storage options. It supports single and multi-host Docker
-environments with features that include tenant isolation, automated
-provisioning, encryption, secure deletion, snapshots and QoS.
+The Blockbridge volume driver integrates Docker with Blockbridge storage
+services in single and multi-host Docker deployments. Using Blockbridge enables
+tenant isolation, automated provisioning, encryption, secure deletion,
+snapshots and QoS for any storage backend: on local storage or with any storage
+vendor over any protocol.
 
-This volume plugin requires Blockbridge Elastic Programmable Storage as the
-storage backend. To use a Blockbridge storage simulator, or for more
-information about Blockbridge, see below.
+The Blockbridge volume driver implements the Docker volume plugin API, and runs
+as a container.
 
-Docker 1.8+ is required to use the volume plugin.
+The Blockbridge storage backend is available as a simulator running as a Docker
+container, and is free for development and non-commercial use. Use the storage
+simulator alongside the volume driver on the same host for a simple test, or
+use multiple hosts and aggregate storage pools across multiple storage nodes.
 
-## Demo
+The volume driver and storage simulator are supported on any Linux platform
+that runs Docker, including CoreOS and OSX (boot2docker/docker-machine).
 
-[![A closer look at docker volume plugins in action](https://cloud.githubusercontent.com/assets/5973862/9637035/84d5f6e6-516c-11e5-9656-46dcae410569.png)](http://www.blockbridge.com/a-closer-look-at-docker-volume-plugins-in-action/)
+- Docker 1.8+: required to use the volume plugin.
+- Docker 1.9:  adds volume management and volume options (e.g.: docker volume create --driver blockbridge --opt ...).
+- Docker 1.10: adds support for out-of-band, multi-host volume management.
+
+Table of Contents
+=================
+
+  * [Blockbridge Volume Plugin for
+    Docker](#blockbridge-volume-plugin-for-docker)
+    * [Installation](#installation)
+    * [Driver Configuration](#driver-configuration)
+    * [Start the volume driver](#start-the-volume-driver)
+    * [Volume Types](#volume-types)
+      * [Autovol](#autovol)
+      * [Autoclone](#autoclone)
+      * [Snappy](#snappy)
+    * [Volume Options](#volume-options)
+      * [User](#user)
+      * [Capacity](#capacity)
+      * [IOPS](#iops)
+      * [Clone Basis (autoclone)](#clone-basis-autoclone)
+      * [Snapshot Tag (autoclone)](#snapshot-tag-autoclone)
+      * [Snapshot Interval Hours (snappy)](#snapshot-interval-hours-snappy)
+      * [Snapshot Interval History (snappy)](#snapshot-interval-history-snappy)
+    * [Attribute based provisioning](#attribute-based-provisioning)
+    * [Create a volume in Docker (in-band)](#create-a-volume-in-docker-in-band)
+      * [Docker volume create (Explicit)](#docker-volume-create-explicit)
+      * [Docker volume create (Implicit)](#docker-volume-create-implicit)
+      * [Docker run with volume](#docker-run-with-volume)
+      * [List volumes with docker](#list-volumes-with-docker)
+      * [Inspect volume with docker](#inspect-volume-with-docker)
+    * [Create a volume with Blockbridge (out-of-band: docker 1.10
+      )](#create-a-volume-with-blockbridge-out-of-band-docker-110)
+      * [Create a volume (out-of-band):](#create-a-volume-out-of-band)
+      * [List volumes (out-of-band)](#list-volumes-out-of-band)
+      * [Inspect volumes (out-of-band)](#inspect-volumes-out-of-band)
+      * [Inspect one volume (out-of-band)](#inspect-one-volume-out-of-band)
+      * [Full command help (out-of-band)](#full-command-help-out-of-band)
+    * [Volume Profiles](#volume-profiles)
+      * [Volume Profiles Provisioning
+        Attributes](#volume-profiles-provisioning-attributes)
+        * [(Example) Gold Storage Profile](#example-gold-storage-profile)
+        * [(Example) Availability Zone East
+          Profile](#example-availability-zone-east-profile)
+        * [(Example) Rack42 Profile](#example-rack42-profile)
+      * [List Profiles](#list-profiles)
+      * [Inspect one Profile](#inspect-one-profile)
+      * [Full command help](#full-command-help)
+    * [Anonymous / Default Volumes](#anonymous--default-volumes)
+    * [Multi-Host Volumes](#multi-host-volumes)
+      * [Create a profile on host #1](#create-a-profile-on-host-1)
+      * [Use a volume on host #2](#use-a-volume-on-host-2)
+      * [Use the volume on host #3 with
+        zero-copy](#use-the-volume-on-host-3-with-zero-copy)
+    * [Blockbridge Storage](#blockbridge-storage)
+    * [Blockbridge Storage Simulator](#blockbridge-storage-simulator)
+    * [Support](#support)
 
 ## Installation
 
-The Blockbridge volume plugin runs as a Docker container right alongside your
-application containers.
+Pull the volume driver image:
+````
+docker pull blockbridge/volume-driver:latest
+````
 
-Checkout the git repository:
+Clone this repository to run the volume driver startup script:
 ````
 git clone https://github.com/blockbridge/blockbridge-docker-volume.git
 cd blockbridge-docker-volume
 ````
 
-The volume driver is available to run directly from the Docker hub registry. The script to run the driver is included here.
-
 ## Driver Configuration
 
-The volume driver needs to be configured with a Blockbridge API backend host, and a `system` API token.
+The volume driver requires two pieces of configuration. It needs to know the
+Blockbridge management node that is providing storage services. And it
+needs an API authorization token to use for authentication.
 
-If using the Blockbridge simulator container, retrieve the IP address and API
-key from the management node:
+The Blockbridge storage simulator automatically generates this information when
+it runs for the first time. Retrieve the IP address and API authorization from
+the simulator management node.
 
 ````
 # docker logs bbsim-mn
@@ -43,8 +106,7 @@ IP Address:      172.17.42.121
 Admin API Key:   1/4pz/TrwO0l53xY8j6VkorTZu2wJEeaaH5PktWI2AxSXynP9OvA7THw
 ````
 
-Then, set these values as an environment variable, or edit the
-`bin/blockbridge-docker-volume` script and set them there.
+Configure the volume driver by setting two environment variables.
 
 ````
 export BLOCKBRIDGE_API_HOST="172.17.42.121"
@@ -53,155 +115,316 @@ export BLOCKBRIDGE_API_KEY="1/4pz/TrwO0l53xY8j6VkorTZu2wJEeaaH5PktWI2AxSXynP9OvA
 
 ## Start the volume driver
 
-Once configured, start the driver:
-
 ````
-bin/blockbridge-docker-volume
+./bin/blockbridge-docker-volume
 ````
 
-The Blockbridge volume driver should now be running:
+Alternatively, set the environment and start the driver at the same time:
+
+````
+BLOCKBRIDGE_API_HOST="172.17.42.121" BLOCKBRIDGE_API_KEY="1/4pz/TrwO0l53xY8j6VkorTZu2wJEeaaH5PktWI2AxSXynP9OvA7THw" ./bin/blockbridge-docker-volume
+````
+
+Confirm the driver is running:
 ````
 # docker ps
 CONTAINER ID        IMAGE                       COMMAND                CREATED              STATUS              PORTS                                      NAMES
-f9bba845cc12        blockbridge/volume-driver   "./volume-driver"      About a minute ago   Up About a minute                                              blockbridge-volume-driver
+f9bba845cc12        blockbridge/volume-driver   "./volume-driver.sh"      About a minute ago   Up About a minute                                              blockbridge-volume-driver
 ````
 
-## Volume Configuration
+## Volume Types
 
-In order to use a Blockbridge volume in a container it must be configured via an environment configuration file. By default, these files are located in`/bb/env` and the name of the file must match the name of the volume being used. Each volume configuration file specifies the type of volume, capacity, user/account to provision for, and unique volume attributes. 
+The Blockbridge volume driver supports multiple volume types which determine
+the behavior of the volumes. All volume types are provisioned according to the
+volume options and provisioning attributes specified.
 
-This configuration is specified in the file with the following settings:
+### Autovol
 
-    TYPE, USER, CAPACITY, ATTRIBUTES
+The basic and default type.
 
-* `TYPE`: the type of Blockbridge storage container for this volume. This can currently either
-be `autovol` or `snappy`. See below for description of the Blockbridge Storage as a Container types.
-* `USER`: a Blockbridge username/account to provision the volume for.
-* `CAPACITY`: the capacity of the volume. This can be specified with units, such as
-32GiB.
-* `ATTRIBUTES`: storage attributes for the volume. These user defined attributes
-are set on the blockbridge datastore, and determines what kind of storage to provision, what location to provision from, rack, datacenter, etc. This can include tags such as "+ssd,
-"+us-east-1c" to include, or "-production" to exclude. This field can be left
-blank, and the default provisioning algorithm is used.
+### Autoclone
 
-For example, let's create a configuration file for a volume for a busybox container.
+An **autoclone** volume first clones a virtual disk snapshot identified as the
+basis. Any modifications occur in the clone, keeping the original data intact.
 
-`/bb/env/busybox-demo`:
+### Snappy
+
+An evolution from **autovol**, a **snappy** volume periodically takes snapshots of
+the volume data. Snaphot interval and retention history is configurable, and your
+filesystem is always consistent.
+
+## Volume Options
+
+The volume is provisioned according to the options specified. The volume type
+determines the required options. As Blockbridge is multi-tenant storage, a
+**User** is always required.
+
+### User
+
+The user (tenant) to provision the volume for.
+
+Option name: **user**
+
+### Capacity
+
+The volume capacity.
+
+Option name: **capacity**
+
+### IOPS
+
+The volume quality of service (QoS). This is a reserved, guaranteed minimum
+IOPS performance of the volume. It requires QoS configuration on the backend.
+
+Option name: **iops**
+
+### Clone Basis (autoclone)
+
+The basis disk to clone the snapshot from.
+
+Option name: **clone_basis**
+
+### Snapshot Tag (autoclone)
+
+The tag that identifies the snapshot to clone.
+
+Option name: **snapshot_tag**
+
+### Snapshot Interval Hours (snappy)
+
+The interval at which to take a snapshot (every N hours)
+
+Option name: **snapshot_interval_hours**
+
+### Snapshot Interval History (snappy)
+
+The number of snapshots to retain.
+
+Option name: **snapshot_interval_history**
+
+## Attribute based provisioning
+
+In addition to the required volume options, volume provisioning attributes can
+be specified to determine particular qualities of the storage to provision
+from.
+
+These attributes are configured by an administrator on the Blockbridge storage
+backend, and then specified by the volume driver as query parameters.
+
+Attributes such as SSD, IOPS 30000, Rack 42, New York, Chicago, Production, all
+identify unique sets of storage pools.
+
+Specifying provisioning attributes provides an automated and fundamental way to
+describe the exact storage characteristics you want to provision for your
+volume.
+
+## Create a volume in Docker (in-band)
+
+There are two ways in Docker to create a volume, either explicitly via *docker
+volume create* or implicitly at *docker run* time.
+
+### Docker volume create (Explicit)
+
+Create a blockbridge volume:
 ````
-TYPE=autovol
-USER=block
-CAPACITY=32GiB
+docker volume create --driver blockbridge --name datavol --opt user=block --opt capacity=32GiB
 ````
 
-If configured on the backend, specify provisioning attributes as desired:
+### Docker volume create (Implicit)
 
+Create a blockbridge volume:
 ````
-ATTRIBUTES=+ssd +us-east-1c -production
-````
-
-## Start a container with a Blockbridge volume
-
-Start the busybox container with the data volume that was just configured:
-
-````
-docker run --rm -ti --volume busybox-demo:/data --volume-driver=blockbridge busybox sh
+docker run --volume-driver blockbridge -v datavol:/data -it busybox sh
 ````
 
-The volume name `busybox-demo` is the unique volume name. This name must match the configuration file name in `/bb/env`, and is considered a unique volume to Docker.
+NOTE: you cannot pass volume options on the commandline during *docker run*,
+these can only be specified explicitly with *docker volume create --opt*, or a
+Blockbridge default volume profile must be setup.
 
-NOTE: the very first volume you use with the volume driver set to `blockbridge` may take slightly longer to load. This is due to images that don't yet exist locally being pulled down from Docker.
+### Docker run with volume
 
-After `busybox` loads, the volume is mounted on `/data` in the container:
+Reference existing Blockbridge volume at docker run:
 ````
-# df /data
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/blockbridge/volume-busybox-demo/sdc
-                      33537988     33312  33504676   0% /data
+docker run -v datavol:/data -it busybox sh
 ````
 
-You are now using Blockbridge persistent, multi-tenant, secure storage for your Docker volumes!
+### List volumes with docker
+````
+docker volume ls
+````
+
+### Inspect volume with docker
+````
+docker volume inspect datavol
+````
+
+## Create a volume with Blockbridge (out-of-band: docker 1.10+)
+
+The Blockbridge volume driver supports out of band volume creation, outside of
+Docker. In Docker 1.10, the volume driver is responsible for maintaining a list
+of volumes, and Docker does not keep its own state about third-party volumes
+available through plugins.
+
+### Create a volume (out-of-band):
+````
+docker exec blockbridge-volume-driver volume create --name datavol --user block --capacity 32GiB
+````
+
+### List volumes (out-of-band)
+````
+docker exec blockbridge-volume-driver volume ls
+````
+
+### Inspect volumes (out-of-band)
+````
+docker exec blockbridge-volume-driver volume info
+````
+
+### Inspect one volume (out-of-band)
+````
+docker exec blockbridge-volume-driver volume info --name datavol
+````
+
+### Full command help (out-of-band)
+````
+docker exec blockbridge-volume-driver volume --help
+````
+
+## Volume Profiles
+
+Blockbridge volume profiles are a way to describe different sets of volume
+options and provisioning attributes as a **Storage Profile** or **Storage
+Template**.  Instead of specifying each individual option every time a volume is
+created, a volume profile can be referenced.
+
+Create a profile with the volume driver:
+````
+docker exec blockbridge-volume-driver profile create --name block-profile --user block --capacity 32GiB
+````
+
+Reference the profile to create a volume. Each volume that uses this
+**block-profile** will be created for the **block** user with a capacity of
+**32GiB**.
+````
+docker volume create --driver blockbridge --name datavol2 --opt profile=block-profile
+````
+
+### Volume Profiles Provisioning Attributes
+
+The power of volume profiles comes from defining sets of options and defining
+storage provisioning attributes. For example, you may have different classes of
+storage, Gold and Silver. You may have storage in different availability zones,
+different racks in a datacenter, different storage media (ssd, spinners), and
+for different users.
+
+Define profiles that make sense for your environment.
+
+#### (Example) Gold Storage Profile
+````
+docker exec blockbridge-volume-driver profile create --name gold --user block --capacity 1TiB +ssd +production +multipath +high-iops
+````
+
+#### (Example) Availability Zone East Profile
+````
+docker exec blockbridge-volume-driver profile create --name us-east --user block --capacity 10GiB +us-east +ssd -production
+````
+
+#### (Example) Rack42 Profile
+````
+docker exec blockbridge-volume-driver profile create --name rack42 --user block --capacity 16GiB +rack42
+````
+
+### List Profiles
+````
+docker exec blockbridge-volume-driver profile ls
+````
+
+### Inspect one Profile
+````
+docker exec blockbridge-volume-driver profile info --name rack42
+````
+
+### Full command help
+````
+docker exec blockbridge-volume-driver profile --help
+````
+
+## Anonymous / Default Volumes
+
+Many volumes in Docker are so-called **anonymous** volumes, or unnamed volumes.
+These volumes get a generated name that looks like a long hash string. The
+Blockbridge volume driver supports these volumes through the specification of a
+**default** volume profile. Any volume that gets created through the Blockbridge
+volume driver with no options or profile specified will use the **default**
+volume profile if it is defined.
+
+The default volume profile is a specially named profile, appropriately named as
+**default**.
+
+Create the default profile:
+````
+docker exec blockbridge-volume-driver profile create --name default --user block --capacity 32GiB
+````
+
+Use the default profile by using an anonymous volume:
+````
+docker run --volume-driver blockbridge -v /data -it busybox sh
+````
+
+Use the default profile by using a named volume with no options:
+````
+docker volume create --driver blockbridge --name defaultvol
+````
+
+## Multi-Host Volumes
+
+All volumes created through Blockbridge are by definition multi-host volumes.
+The same goes for volume **Storage Profiles**. Create a volume or a profile
+through one Blockbridge volume driver, and that volume or profile is accessible
+from any other host, through any other Blockbridge volume driver.
+
+Volumes are globally accessible. Volume profiles are global.
+
+### Create a profile on host #1
+````
+host1$ docker exec blockbridge-volume-driver profile create --name default --user block --capacity 32GiB
+````
+
+### Use a volume on host #2
+````
+host2$ docker run --name mongo-app --volume-driver blockbridge -v mongodata:/data/db -d mongo
+````
+
+[ *Write data to volume..* ]
+
+````
+host2$ docker stop mongo-app
+````
+
+### Use the volume on host #3 with zero-copy
+````
+host3$ docker run --name mongo-app --volume-driver blockbridge -v mongodata:/data/db -d mongo
+````
+
+Blockbridge volumes are accessible on any host, with no data copy required.
 
 ## Blockbridge Storage
 
-The Blockbridge volume plugin for Docker uses Blockbridge Elastic Programmable Storage as
+The Blockbridge volume driver for Docker uses Blockbridge storage services as
 the backend.
-
-Please visit for more information:
 
 * [http://blockbridge.io/docker](http://blockbridge.io/docker)
 * [http://blockbridge.io](http://blockbridge.io)
 
 ## Blockbridge Storage Simulator
 
-Blockbridge storage is available as a simulator for trial and non-production
-use. The simulator also runs as a Docker container. This is an easy way to try out Blockbridge storage, and to try out the Blockbridge volume plugin for Docker.
-
-Please visit for more information:
+The Blockbridge storage backend is available as a simulator running as a Docker
+container, and is free for development and non-commercial use.
 
 * [blockbridge-demo](https://github.com/blockbridge/blockbridge-demo)
 * [blockbridge-demo/simulator/README.md](https://github.com/blockbridge/blockbridge-demo/blob/master/simulator/README.md)
 
-## Blockbridge Storage as a Container volume types
-
-### autovol
-
-The `autovol` storage container type is the basic Blockbridge storage container option, and provisons an "automatic volume". To use `autovol`, specify the TYPE in the volume env file.
-
-````
-TYPE=autovol
-USER=block
-CAPACITY=32GiB
-```
-
-### autoclone
-
-The `autoclone` storage container type uses `thin clone` technology to clone a basis disk when the volume is created. Specify the disk basis, the snapshot to clone, and your `autoclone` volume is instaneously created as a thin layer. Use a golden image as a basis, and release across your clients in seconds.
-
-````
-TYPE=autoclone
-USER=block
-CLONE_BASIS=disk-1
-SNAPSHOT_TAG=latest
-````
-
-### snappy
-
-The `snappy` storage container type extends the `autovol` container by providing snapshot support. Periodic snapshots are taken of the volume, as configured. These snapshots are done with zero I/O.
-
-To use a `snappy` volume, specify the following options in the volume env file:
-
-```
-TYPE=snappy
-USER=block
-CAPACITY=32GiB
-SNAPSHOT_INTERVAL_HOURS=1
-SNAPSHOT_INTERVAL_HISTORY=24
-```
-
-This configuration will take a snapshot once an hour, and retain the last 24 hours of snapshot history for the volume.
-
-## OPTIONAL: build the Blockbridge volume driver
-
-The Blockbridge volume driver is available on the Docker hub registry. If desired, it can also be built locally.
-
-Simply type:
-
-````
-make
-````
-
-And an updated image will be built and available. The script `bin/blockbridge-docker-volume` when run will stop and remove any currently running driver, so can be run again to start the volume driver with the new image.
-
-````
-bin/blockbridge-docker-volume
-```
-
-## OPTIONAL: iscsid
-
-The Blockbridge volume driver uses and requires iSCSI by running `iscsid`, and will conflict with the system iscsid if it is not disabled first. Either first disable any iscsid service on the client host, or the following script can be run to disable it for you:
-
-* [blockbridge-demo/iscsid/disable-host-iscsid.sh](https://github.com/blockbridge/blockbridge-demo/blob/master/iscsid/disable-host-iscsid.sh)
-
 ## Support
 
-Please let us know what you think! Contact us at support@blockbridge.com.
+Please let us know what you think! Contact us at support@blockbridge.com or on
+github.

@@ -1,9 +1,17 @@
-# Copyright (c) 2015, Blockbridge Networks LLC.  All rights reserved.
+# Copyright (c) 2015-2016, Blockbridge Networks LLC.  All rights reserved.
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 
-module Blockbridge
+module Helpers
   module Refs
+    def vol_ref_path
+      File.join(vol_path, 'ref')
+    end
+
+    def mnt_ref_file
+      File.join(vol_ref_path, 'mnt')
+    end
+
     def get_ref(ref_file)
       begin
         File.open(ref_file, 'r') do |f|
@@ -45,14 +53,6 @@ module Blockbridge
       set_ref(file, dat)
     end
 
-    def volume_ref
-      ref_incr(vol_ref_file, "reference")
-    end
-
-    def volume_unref
-      ref_decr(vol_ref_file, "reference")
-    end
-
     def mount_ref
       ref_incr(mnt_ref_file, "mounts")
     end
@@ -67,12 +67,6 @@ module Blockbridge
           FileUtils.rm_rf(File.join(volumes_root, vol, 'ref'))
         end
       end
-    end
-
-    def volume_needed?
-      dat = get_ref(vol_ref_file)
-      return true if dat && dat['ref'] > 1
-      false
     end
 
     def mount_needed?

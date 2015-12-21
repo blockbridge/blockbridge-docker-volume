@@ -40,10 +40,22 @@ GEM
       ice_nine (~> 0.11.0)
       thread_safe (~> 0.3, >= 0.3.1)
     builder (3.2.2)
+    clamp (1.0.0)
     coercible (1.0.0)
       descendants_tracker (~> 0.0.1)
+    cookiejar (0.3.2)
     descendants_tracker (0.0.4)
       thread_safe (~> 0.3, >= 0.3.1)
+    domain_name (0.5.25)
+      unf (>= 0.0.5, < 1.0.0)
+    em-http-request (1.1.2)
+      addressable (>= 2.3.4)
+      cookiejar
+      em-socksify (>= 0.3)
+      eventmachine (>= 1.0.3)
+      http_parser.rb (>= 0.6.0)
+    em-socksify (0.3.1)
+      eventmachine (>= 1.0.0.beta.4)
     em-synchrony (1.0.4)
       eventmachine (>= 1.0.0.beta.1)
     em-websocket (0.3.8)
@@ -65,14 +77,18 @@ GEM
       rack-contrib
       rack-respond_to
     hashie (3.4.2)
+    http-cookie (1.0.2)
+      domain_name (~> 0.5)
     http_parser.rb (0.6.0)
     i18n (0.7.0)
     ice_nine (0.11.1)
     json (1.8.3)
     log4r (1.1.10)
+    mime-types (2.99)
     minitest (5.7.0)
     multi_json (1.9.3)
     multi_xml (0.5.5)
+    netrc (0.11.0)
     posix-spawn (0.3.11)
     rack (1.6.4)
     rack-accept (0.4.5)
@@ -85,9 +101,20 @@ GEM
       rack (>= 1.0.0)
     rack-respond_to (0.9.8)
       rack-accept-media-types (>= 0.6)
+    require_all (1.3.2)
+    rest-client (1.8.0)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 3.0)
+      netrc (~> 0.7)
+    rest-client-components (1.4.0)
+      rack (>= 1.0.1)
+      rest-client (>= 1.6.0)
     thread_safe (0.3.5)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.1)
     virtus (1.0.5)
       axiom-types (~> 0.1)
       coercible (~> 1.0)
@@ -98,10 +125,17 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  clamp
   docker-api!
+  em-http-request
+  em-synchrony
+  excon
   goliath
   grape!
   posix-spawn
+  require_all
+  rest-client
+  rest-client-components
 
 BUNDLED WITH
    1.10.6
