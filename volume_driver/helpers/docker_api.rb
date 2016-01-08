@@ -1,8 +1,8 @@
-# Copyright (c) 2015, Blockbridge Networks LLC.  All rights reserved.
+# Copyright (c) 2015-2016, Blockbridge Networks LLC.  All rights reserved.
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 
-module Blockbridge
+module Helpers
   module Docker
     def docker_run(name, opts, force: false, noop: false)
       begin
@@ -55,4 +55,3 @@ module Blockbridge
     end
   end
 end
-
