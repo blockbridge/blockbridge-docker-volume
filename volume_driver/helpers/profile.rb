@@ -11,9 +11,11 @@ module Helpers
       }
     end
 
-    def profile_cmd_exec(cmd)
+    def profile_cmd_exec(cmd, parse_res = true)
       res = cmd_exec_raw(cmd, profile_env)
-      MultiJson.load(res.chomp, symbolize_keys: true)
+      if parse_res
+        MultiJson.load(res.chomp, symbolize_keys: true)
+      end
     end
 
     def profile_ref_prefix
@@ -27,11 +29,10 @@ module Helpers
     def profile_create
       logger.info "#{vol_name} profile creating..."
       data = Hash.new.tap do |h|
-        h[:name]       = params[:name]
-        h[:user]       = params[:user]
-        h[:capacity]   = params[:capacity]
-        h[:type]       = params[:type]
-        h[:attributes] = params[:attributes] if params[:attributes]
+        h[:name] = params[:name]
+        vol_param_keys.each do |p|
+          h[p] = params[p] if params[p]
+        end
       end
       cmd = "bb -k xmd create --ref #{profile_ref_name} --json 'profile=#{MultiJson.dump(data)}' --process 'puts MultiJson.dump(data.map { |d| d[:data][:profile] })'"
       res = profile_cmd_exec(cmd)
@@ -42,7 +43,7 @@ module Helpers
     def profile_remove
       logger.info "#{vol_name} profile removing..."
       cmd = "bb -k xmd remove --ref #{profile_ref_name}"
-      profile_cmd_exec(cmd)
+      profile_cmd_exec(cmd, false)
       logger.info "#{vol_name} profile removed"
     end
 
