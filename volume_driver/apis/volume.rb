@@ -9,7 +9,7 @@ class API::Volume < Grape::API
   params do
     requires :name,         type: String,  desc: 'volume name'
     optional :profile,      type: String,  desc: 'volume profile'
-    optional :type,         type: String,  desc: 'volume type', volume_type: true
+    optional :type,         type: String,  desc: 'volume type', default: 'autovol', volume_type: true
     optional :user,         type: String,  desc: 'volume user (owner)'
     optional :capacity,     type: String,  desc: 'volume capacity'
     optional :iops,         type: Integer, desc: 'volume provisioning IOPS (QoS)'

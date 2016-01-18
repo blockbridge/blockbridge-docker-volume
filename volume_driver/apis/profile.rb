@@ -8,8 +8,8 @@ class API::Profile < Grape::API
   desc 'Create a profile'
   params do
     requires :name,         type: String,  desc: 'profile name'
-    requires :type,         type: String,  desc: 'volume type', volume_type: true
     requires :user,         type: String,  desc: 'volume user (owner)'
+    optional :type,         type: String,  desc: 'volume type', default: 'autovol', volume_type: true
     optional :capacity,     type: String,  desc: 'volume capacity'
     optional :iops,         type: Integer, desc: 'volume provisioning IOPS (QoS)'
     optional :attributes,   type: String,  desc: 'volume attributes'
