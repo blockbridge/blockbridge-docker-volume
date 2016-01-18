@@ -232,7 +232,7 @@ docker volume create --driver blockbridge --name datavol --opt user=block --opt 
 
 ### Docker volume create (Implicit)
 
-Create a blockbridge volume:
+Once a default profile has been configured (see below), create a blockbridge volume:
 ````
 docker run --volume-driver blockbridge -v datavol:/data -it busybox sh
 ````
