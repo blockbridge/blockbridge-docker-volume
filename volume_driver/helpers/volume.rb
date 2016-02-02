@@ -173,7 +173,7 @@ module Helpers
     def volume_list
       volume_info.map do |v|
         {
-          Name:       volume_mapped_name(v),
+          Name:       v[:name],
           Mountpoint: mnt_path(v[:name]),
         }
       end
