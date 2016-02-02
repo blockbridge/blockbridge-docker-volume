@@ -99,9 +99,13 @@ module Helpers
     end
 
     def params_type
+      # return type if specified as parameter
       return params[:type] unless params[:type].nil?
       return params['Opts']['type'] unless params['Opts'].nil? || params['Opts']['type'].nil?
-      return 'autovol' unless params_profile
+
+      # set default type. But not if profile. And only if other params set
+      return if params_profile
+      return 'autovol' if params_opts.keys.include? vol_param_keys
     end
   end
 end

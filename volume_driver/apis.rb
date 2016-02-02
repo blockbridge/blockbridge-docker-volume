@@ -97,7 +97,7 @@ class API::VolumeDriver < Grape::API
   end
 
   rescue_from Blockbridge::NotFound do |e|
-    error!({ Err: e.message }, 404)
+    error!({ Err: e.message }, 400)
   end    
 
   rescue_from Blockbridge::CommandError do |e|

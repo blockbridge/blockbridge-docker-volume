@@ -213,7 +213,7 @@ end
 
 class VolumeCommand < Command
   subcommand 'create', 'create a volume', VolumeCreate
-  subcommand 'remove', 'remove a volume', VolumeRemove
+  subcommand ['remove', 'rm'], 'remove a volume', VolumeRemove
   subcommand 'info', 'show info about a volume', VolumeInfo
   subcommand ['list', 'ls'], 'show all volumes', VolumeList
 end
@@ -256,7 +256,7 @@ end
 class ProfileCommand < Command
   subcommand 'create', 'create a profile', ProfileCreate
   subcommand 'update', 'update a profile', ProfileUpdate
-  subcommand 'remove', 'remove a profile', ProfileRemove
+  subcommand ['remove', 'rm'], 'remove a profile', ProfileRemove
   subcommand 'info', 'show info about a profile', ProfileInfo
   subcommand ['list', 'ls'], 'list all profiles', ProfileList
 end
