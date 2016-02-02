@@ -90,11 +90,12 @@ module Helpers
 
     def volume_params_find
       opts = params_opts
-      if opts && opts[:type]
+      if opts && params_type
         h = Hash.new.tap do |h|
           vol_param_keys.each do |p|
             h[p] = opts[p] if opts.has_key?(p)
           end
+          h[:type] = params_type
         end
         logger.info "#{vol_name} using volume info from options: #{h}"
         h

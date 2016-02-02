@@ -90,12 +90,18 @@ module Helpers
 
     def params_profile
       return params[:profile] if params[:profile]
-      return params['Opts']['profile'] if !params['Opts'].nil?
+      return params['Opts']['profile'] unless params['Opts'].nil?
     end
 
     def params_opts
       return params['Opts'].deep_symbolize_keys if params['Opts']
       return params
+    end
+
+    def params_type
+      return params[:type] unless params[:type].nil?
+      return params['Opts']['type'] unless params['Opts'].nil? || params['Opts']['type'].nil?
+      return 'autovol' unless params_profile
     end
   end
 end
