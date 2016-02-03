@@ -105,7 +105,7 @@ module Helpers
 
       # set default type. But not if profile. And only if other params set
       return if params_profile
-      return 'autovol' if params_opts.keys.include? vol_param_keys
+      return 'autovol' unless ((vol_param_keys - params_opts.keys) == vol_param_keys)
     end
   end
 end
