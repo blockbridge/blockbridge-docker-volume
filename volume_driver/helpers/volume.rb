@@ -24,7 +24,7 @@ module Helpers
 
           # set volume params in environment
           vol_param_keys.each do |p|
-            env[p.to_s.upcase] = volume_params[p] if volume_params[p]
+            env[p.to_s.upcase] = volume_params[p].to_s if volume_params[p]
           end
 
           env
