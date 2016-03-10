@@ -18,5 +18,15 @@ module Helpers
       lock[:ref] -= 1
       Sync.locks.delete(vol_name) if lock[:ref] == 0
     end
+
+    def defer(&blk)
+      res = EM::Synchrony.defer do
+        begin
+          blk.call
+        rescue => e
+          e
+        end
+      end
+    end
   end
 end

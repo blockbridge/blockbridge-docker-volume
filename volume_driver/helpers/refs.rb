@@ -4,12 +4,12 @@
 
 module Helpers
   module Refs
-    def vol_ref_path
-      File.join(vol_path, 'ref')
+    def vol_ref_path(name = nil)
+      File.join(vol_path(name), 'ref')
     end
 
-    def mnt_ref_file
-      File.join(vol_ref_path, 'mnt')
+    def mnt_ref_file(name = nil)
+      File.join(vol_ref_path(name), 'mnt')
     end
 
     def get_ref(ref_file)
@@ -69,8 +69,9 @@ module Helpers
       end
     end
 
-    def mount_needed?
-      dat = get_ref(mnt_ref_file)
+    def mount_needed?(name = nil)
+      return false if name.nil?
+      dat = get_ref(mnt_ref_file(name))
       return true if dat && dat['ref'] > 0
       false
     end

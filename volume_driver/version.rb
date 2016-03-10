@@ -3,7 +3,7 @@
 # in the LICENSE file.
 
 module Blockbridge
-  module VolumeDriverVers
-    VERSION = '3.0'
+  module VolumeDriverVersion
+    VERSION = '3.1'
   end
 end

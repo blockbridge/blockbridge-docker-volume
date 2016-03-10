@@ -5,6 +5,7 @@
 all: volume-driver
 
 volume-driver:
+	docker run -e USER=$(shell id -u) --rm -v $(PWD):/usr/src/app blockbridge/volume-driver-build
 	docker build -t blockbridge/volume-driver .
 
 nocache:

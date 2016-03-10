@@ -39,7 +39,6 @@ done
 ###########################################################
 : ${BLOCKBRIDGE_API_HOST="notset"}
 : ${BLOCKBRIDGE_API_KEY="notset"}
-: ${BLOCKBRIDGE_ROOT="/bb"}
 
 if [[ -z "$BLOCKBRIDGE_API_HOST" || "$BLOCKBRIDGE_API_HOST" == "notset" ]]; then
     echo "BLOCKBRIDGE_API_HOST is required but not set"
@@ -109,14 +108,13 @@ docker run --name blockbridge-volume-driver                                     
            --volume /proc/1/ns:/ns-mnt                                                  \
            --volume /lib/modules:/lib/modules                                           \
            --volume /etc/iscsi:/etc/iscsi                                               \
-           --volume blockbridge-volumes:$BLOCKBRIDGE_ROOT/volumes                       \
+           --volume blockbridge-volumes:/bb/volumes                                     \
            --volume /bb/env:/bb/env                                                     \
            --volume /var/run/docker/plugins/blockbridge:/run/docker/plugins/blockbridge \
            --volume /var/run/docker.sock:/run/docker.sock                               \
            $DEVELOPMENT                                                                 \
            -e BLOCKBRIDGE_API_HOST=$BLOCKBRIDGE_API_HOST                                \
            -e BLOCKBRIDGE_API_KEY=$BLOCKBRIDGE_API_KEY                                  \
-           -e BLOCKBRIDGE_ROOT=$BLOCKBRIDGE_ROOT                                        \
            blockbridge/volume-driver
 
 ###########################################################

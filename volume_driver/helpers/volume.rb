@@ -12,6 +12,7 @@ module Helpers
             "LABEL"                      => vol_name,
             "BLOCKBRIDGE_VOLUME_NAME"    => vol_name,
             "BLOCKBRIDGE_VOLUME_REF"     => volume_ref_name,
+            "BLOCKBRIDGE_CACHE_REF"      => vol_cache_ref,
             "BLOCKBRIDGE_VOLUME_PARAMS"  => MultiJson.dump(volume_params),
             "BLOCKBRIDGE_VOLUME_TYPE"    => volume_type,
             "BLOCKBRIDGE_VOLUME_PATH"    => vol_path,
@@ -118,6 +119,7 @@ module Helpers
     end
 
     def volume_params
+      return if vol_cache_enabled?(vol_name)
       @volume_params ||=
         begin
           p = volume_params_find
@@ -144,6 +146,7 @@ module Helpers
       info.map do |xmd|
         v = xmd[:data][:volume]
         v[:hosts] = volume_hosts(xmd) if volume_hosts(xmd).length > 0
+        v[:deleted] = xmd[:data][:deleted] if xmd[:data][:deleted]
         v
       end
     end
@@ -166,26 +169,39 @@ module Helpers
     end
 
     def volume_lookup
-      raise Blockbridge::NotFound, "No volume named #{vol_name} found" if volume_info.length == 0
-      volume_info
+      info = volume_info
+      raise Blockbridge::NotFound, "No volume named #{vol_name} found" if info.length == 0
+      info
+    end
+
+    def mnt_path_map(name = nil)
+      return "" if name.nil?
+      return "" unless mount_needed?(name)
+      mnt_path(name)
     end
 
     def volume_list
-      volume_info.map do |v|
+      volume_info.select { |v| !v.has_key?(:deleted) }.map do |v|
         {
           Name:       v[:name],
-          Mountpoint: mnt_path(v[:name]),
+          Mountpoint: mnt_path(v[:name])
         }
       end
     end
 
     def volume_get
-      volume_lookup.map { |v|
+      if vol_cache_enabled?(vol_name)
+        v = vol_cache_get(vol_name)
         {
           Name:       v[:name],
-          Mountpoint: mnt_path(v[:name]),
+          Mountpoint: mnt_path_map(v[:name])
         }
-      }.first
+      elsif (v = volume_lookup.first)
+        {
+          Name:       v[:name],
+          Mountpoint: mnt_path_map(v[:name])
+        }
+      end
     end
 
     def volume_create
@@ -195,7 +211,6 @@ module Helpers
         volume_clone
       else
         volume_provision
-        volume_mkfs
       end
       logger.info "#{vol_name} created"
     rescue
@@ -209,8 +224,7 @@ module Helpers
       logger.info "#{vol_name} cloned"
     end
 
-    def volume_remove
-      volume_lookup
+    def volume_bb_remove
       logger.info "#{vol_name} removing..."
       if volume_type == "autoclone"
         volume_cmd_exec("bb_remove", "-c")
@@ -218,6 +232,25 @@ module Helpers
         volume_cmd_exec("bb_remove")
       end
       logger.info "#{vol_name} removed"
+    end
+
+    def volume_start_async_remove
+      params = {
+        mode: 'patch',
+        data: [ { op: 'add', path: '/deleted', value: Time.now.tv_sec } ]
+      }
+      bbapi(volume_user).xmd.update(volume_ref_name, params)
+      vol_cache_add(vol_name, volume_params.merge({deleted: true, env: volume_env}), true)
+    end
+
+    def volume_remove(opts = {})
+      return if vol_cache_enabled?(vol_name)
+      volume_lookup
+      if opts[:async]
+        volume_start_async_remove
+      else
+        volume_bb_remove
+      end
     end
 
     def volume_provision
@@ -249,6 +282,7 @@ module Helpers
       mount_ref
       logger.info "#{vol_name} mounting if needed..."
       volume_cmd_exec("bb_attach")
+      volume_cmd_exec("bb_mkfs")
       volume_cmd_exec("bb_mount")
       logger.info "#{vol_name} mounted"
     end
