@@ -3,6 +3,7 @@
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 
+require 'bundler/setup'
 require 'clamp'
 require 'multi_json'
 require 'restclient'

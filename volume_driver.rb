@@ -8,12 +8,19 @@ require 'goliath'
 require 'grape'
 
 require_relative 'volume_driver/version'
+require_relative 'volume_driver/helpers'
 require_relative 'volume_driver/apis'
+require_relative 'volume_driver/plugins'
+
+# do NOT use Goliath's at_exit auto-run handler.
+Goliath.run_app_on_exit = false
 
 class VolumeDriver
   class Server < Goliath::API
     use Goliath::Rack::Render # auto-negotiate response format
     use Goliath::Rack::Params # parse & merge query and body parameters
+
+    plugin Blockbridge::VolumeMonitor
 
     # process api call
     def response(env)
@@ -54,7 +61,7 @@ class VolumeDriver
       @api    = VolumeDriver::Server.new
       @app    = Goliath::Rack::Builder.build(VolumeDriver::Server, api)
       @logger = VolumeDriver::Logger.new('blockbridge')
-      @logger.info "Blockbridge Docker Volume Driver #{Blockbridge::VolumeDriverVers::VERSION}"
+      @logger.info "Blockbridge Docker Volume Driver #{Blockbridge::VolumeDriverVersion::VERSION}"
     end
 
     def run
@@ -65,5 +72,7 @@ class VolumeDriver
   end
 end
 
-VolumeDriver::Runner.new().run
+driver = VolumeDriver::Runner.new()
+driver.load_plugins(VolumeDriver::Server.plugins)
+driver.run
 exit 0

@@ -19,7 +19,7 @@ module Helpers
         res.succeed(result)
       }
       EM.defer(nil, cb) do
-        child = POSIX::Spawn::Child.build(cmd_env, *cmd, :timeout => 60)
+        child = POSIX::Spawn::Child.build(cmd_env.deep_stringify_keys, *cmd, :timeout => 60)
         begin
           child.exec!
           {
@@ -46,11 +46,11 @@ module Helpers
       res[:out]
     end
 
-    def cmd_res_dump(res)
+    def cmd_res_dump(res, vol = vol_name)
       return if res.nil?
       res.split('\n').each do |m|
         msg = m.chomp.squeeze("\n")
-        msg.each_line do |m| logger.info "#{vol_name} #{m.chomp}" end
+        msg.each_line do |m| logger.info "#{vol} #{m.chomp}" end
       end
     end
 

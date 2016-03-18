@@ -10,9 +10,6 @@
 # Validate environment parameters
 : ${BLOCKBRIDGE_API_HOST:?"not set"}
 : ${BLOCKBRIDGE_API_KEY:?"not set"}
-: ${BLOCKBRIDGE_ROOT:?"not set"}
-
-export BLOCKBRIDGE_ROOT
 
 trap '' TERM
 

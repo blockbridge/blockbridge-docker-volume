@@ -2,8 +2,10 @@
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 
+require 'docker'
+
 module Helpers
-  module Docker
+  module DockerApi
     def docker_run(name, opts, force: false, noop: false)
       begin
         logger.debug "docker creating #{name} from #{opts['Image']}"
@@ -52,6 +54,15 @@ module Helpers
         msg = m.chomp.squeeze("\n")
         msg.each_line do |m| logger.info "#{vol_name} #{m.chomp}" end
       end
+    end
+
+    def docker_volume_rm(name)
+      vol = Docker::Volume.get(name)
+      vol.remove
+    end
+
+    def docker_volume_get(name)
+      Docker::Volume.get(name)
     end
   end
 end

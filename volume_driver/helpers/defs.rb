@@ -4,8 +4,12 @@
 
 module Helpers
   module Defs
+    def blockbridge_root
+      ENV['BLOCKBRIDGE_ROOT'] || '/bb'
+    end
+
     def volumes_root
-      @volumes_root ||= File.join(ENV['BLOCKBRIDGE_ROOT'], 'volumes')
+      @volumes_root ||= File.join(blockbridge_root, 'volumes')
     end
 
     def vol_name
@@ -21,11 +25,11 @@ module Helpers
     end
 
     def env_path
-      File.join(ENV['BLOCKBRIDGE_ROOT'], 'env', env_name)
+      File.join(blockbridge_root, 'env', env_name)
     end
 
     def env_path_default
-      File.join(ENV['BLOCKBRIDGE_ROOT'], 'env', 'DEFAULT')
+      File.join(blockbridge_root, 'env', 'DEFAULT')
     end
 
     def env_file
@@ -73,11 +77,12 @@ module Helpers
     end
 
     def mnt_path(name = vol_name)
-      File.join(ENV['BLOCKBRIDGE_ROOT'], 'mnt', name)
+      File.join(blockbridge_root, 'mnt', name)
     end
 
     def vol_path(name = vol_name)
-      File.join(volumes_root, vol_name)
+      return "" if name.nil?
+      File.join(volumes_root, name)
     end
 
     def api_token
