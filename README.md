@@ -1,6 +1,6 @@
 # Blockbridge Volume Plugin for Docker
 
-Version 3.0
+Version 3.1
 
 The Blockbridge volume driver integrates Docker with Blockbridge storage
 services in single and multi-host Docker deployments. Using Blockbridge enables
