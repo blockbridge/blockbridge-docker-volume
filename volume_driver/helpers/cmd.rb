@@ -19,7 +19,8 @@ module Helpers
         res.succeed(result)
       }
       EM.defer(nil, cb) do
-        child = POSIX::Spawn::Child.build(cmd_env.deep_stringify_keys, *cmd, :timeout => 60)
+        cmd_env.deep_stringify_keys! if cmd_env
+        child = POSIX::Spawn::Child.build(cmd_env, *cmd, :timeout => 60)
         begin
           child.exec!
           {
