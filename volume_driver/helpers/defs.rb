@@ -86,11 +86,19 @@ module Helpers
     end
 
     def api_token
-      ENV['BLOCKBRIDGE_API_KEY']
+      ENV['BLOCKBRIDGE_API_KEY'] || "default"
     end
 
     def api_host
       ENV['BLOCKBRIDGE_API_HOST']
+    end
+
+    def api_url
+      if ENV['BLOCKBRIDGE_API_KEY']
+        "https://#{api_host}/api"
+      else
+        "https://#{Resolv.getaddress(api_host)}:9999/api"
+      end
     end
 
     def params_profile

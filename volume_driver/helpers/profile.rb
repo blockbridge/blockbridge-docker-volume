@@ -8,6 +8,7 @@ module Helpers
       env = { 
         "BLOCKBRIDGE_API_KEY"        => api_token,
         "BLOCKBRIDGE_API_HOST"       => api_host,
+        "BLOCKBRIDGE_API_URL"        => api_url,
       }
     end
 

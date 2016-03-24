@@ -19,7 +19,8 @@ module Helpers
     end
 
     def url
-      "https://#{api_host}/api"
+      "https://#{api_host}/api" if api_host
+      api_url if api_url
     end
 
     def client_params(user)
