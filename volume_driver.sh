@@ -8,8 +8,7 @@
 ###########################################################
 
 # Validate environment parameters
-: ${BLOCKBRIDGE_API_HOST:?"not set"}
-: ${BLOCKBRIDGE_API_KEY:?"not set"}
+#: ${BLOCKBRIDGE_API_HOST:?"not set"}
 
 trap '' TERM
 

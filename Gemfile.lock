@@ -1,14 +1,26 @@
 GIT
   remote: /usr/lib/blockbridge-api
-  revision: 30bee1a90b25c841f9d8d68cfc265d73023f6436
-  branch: volume_driver
+  revision: b0e330ce5afea58eac9576762800308f9094690e
+  branch: master
   specs:
     blockbridge-api (1.1.0)
       excon (~> 0.48)
       hashie (~> 3.4)
-      heroics (~> 0.0.12.bb7)
+      heroics (= 0.0.12.bb7)
       jsonpath
       multi_json (~> 1.11)
+
+GIT
+  remote: /usr/lib/heroics
+  revision: 72ded2ef01de207204694549e5851f7a241b0f2d
+  branch: bb
+  specs:
+    heroics (0.0.12.bb7)
+      erubis (~> 2.7.0)
+      excon
+      moneta
+      multi_json (>= 1.9.2)
+      netrc
 
 GIT
   remote: git://github.com/srust/grape.git
@@ -90,12 +102,6 @@ GEM
       rack-contrib
       rack-respond_to
     hashie (3.4.3)
-    heroics (0.0.16)
-      erubis (~> 2.0)
-      excon
-      moneta
-      multi_json (>= 1.9.2)
-      netrc
     http-cookie (1.0.2)
       domain_name (~> 0.5)
     http_parser.rb (0.6.0)
@@ -155,6 +161,7 @@ DEPENDENCIES
   excon (>= 0.46.0)
   goliath
   grape!
+  heroics!
   posix-spawn
   require_all
   rest-client

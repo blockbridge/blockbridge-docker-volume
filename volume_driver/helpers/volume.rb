@@ -20,6 +20,7 @@ module Helpers
             "BLOCKBRIDGE_MODULES_EXPORT" => "1",
             "BLOCKBRIDGE_API_KEY"        => api_token,
             "BLOCKBRIDGE_API_HOST"       => api_host,
+            "BLOCKBRIDGE_API_URL"        => api_url,
             "BLOCKBRIDGE_API_SU"         => volume_user,
           }
 

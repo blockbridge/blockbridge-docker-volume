@@ -1,6 +1,6 @@
-# Copyright (c) 2015-2016, Blockbridge Networks LLC.  All rights reserved.
-# Use of this source code is governed by a BSD-style license, found
-# in the LICENSE file.
+# Copyright (c) 2015-2016, Blockbridge Networks LLC.  All rights reserved.  Use
+# of this source code is governed by a BSD-style license, found in the LICENSE
+# file.
 
 module Blockbridge
   class VolumeMonitor
@@ -46,20 +46,25 @@ module Blockbridge
       logger.error "Failed to remove docker cached volume: #{name}: #{e.message}"
     end
 
+    def volume_user_lookup(user)
+      raise Blockbridge::Notfound if bbapi.user_profile.list(login: user).length == 0
+    end
+
     def volume_lookup(vol)
+      volume_user_lookup(vol[:user])
       bbapi(vol[:user]).xmd.info("docker-volume-#{vol[:name]}")
-    rescue Excon::Errors::NotFound, Excon::Errors::Gone
+    rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound
     end
 
     def cache_status_create
-      return if bbapi.xmd.info(vol_cache_ref) rescue nil
+      xmd = bbapi.xmd.info(vol_cache_ref) rescue nil
+      return xmd unless xmd.nil?
       bbapi.xmd.create(ref: vol_cache_ref)
     rescue Blockbridge::Api::ConflictError
     end
 
     def cache_version_lookup
-      cache_status_create
-      xmd = bbapi.xmd.info(vol_cache_ref)
+      xmd = cache_status_create
       xmd[:seq]
     rescue Excon::Errors::NotFound, Excon::Errors::Gone
     end
@@ -99,7 +104,7 @@ module Blockbridge
     rescue => e
       msg = e.message.chomp.squeeze("\n")
       msg.each_line do |m| logger.error(m.chomp) end
-      e.backtrace.each do |b| logger.error(b) end
+      #e.backtrace.each do |b| logger.error(b) end
     end
   end
 end
