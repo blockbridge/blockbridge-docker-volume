@@ -23,114 +23,14 @@ that runs Docker, including CoreOS and OSX (boot2docker/docker-machine).
 - Docker 1.9:  adds volume management and volume options (e.g.: docker volume create --driver blockbridge --opt ...).
 - Docker 1.10: adds support for out-of-band, multi-host volume management.
 
-Table of Contents
-=================
-
-  * [Blockbridge Volume Plugin for
-    Docker](#blockbridge-volume-plugin-for-docker)
-    * [Installation](#installation)
-    * [Driver Configuration](#driver-configuration)
-    * [Start the volume driver](#start-the-volume-driver)
-    * [Volume Types](#volume-types)
-      * [Autovol](#autovol)
-      * [Autoclone](#autoclone)
-      * [Snappy](#snappy)
-    * [Volume Options](#volume-options)
-      * [User](#user)
-      * [Capacity](#capacity)
-      * [IOPS](#iops)
-      * [Clone Basis (autoclone)](#clone-basis-autoclone)
-      * [Snapshot Tag (autoclone)](#snapshot-tag-autoclone)
-      * [Snapshot Interval Hours (snappy)](#snapshot-interval-hours-snappy)
-      * [Snapshot Interval History (snappy)](#snapshot-interval-history-snappy)
-    * [Attribute based provisioning](#attribute-based-provisioning)
-    * [Create a volume in Docker (in-band)](#create-a-volume-in-docker-in-band)
-      * [Docker volume create (Explicit)](#docker-volume-create-explicit)
-      * [Docker volume create (Implicit)](#docker-volume-create-implicit)
-      * [Docker run with volume](#docker-run-with-volume)
-      * [List volumes with docker](#list-volumes-with-docker)
-      * [Inspect volume with docker](#inspect-volume-with-docker)
-    * [Create a volume with Blockbridge (out-of-band: docker 1.10
-      )](#create-a-volume-with-blockbridge-out-of-band-docker-110)
-      * [Create a volume (out-of-band):](#create-a-volume-out-of-band)
-      * [List volumes (out-of-band)](#list-volumes-out-of-band)
-      * [Inspect volumes (out-of-band)](#inspect-volumes-out-of-band)
-      * [Inspect one volume (out-of-band)](#inspect-one-volume-out-of-band)
-      * [Full command help (out-of-band)](#full-command-help-out-of-band)
-    * [Volume Profiles](#volume-profiles)
-      * [Volume Profiles Provisioning
-        Attributes](#volume-profiles-provisioning-attributes)
-        * [(Example) Gold Storage Profile](#example-gold-storage-profile)
-        * [(Example) Availability Zone East
-          Profile](#example-availability-zone-east-profile)
-        * [(Example) Rack42 Profile](#example-rack42-profile)
-      * [List Profiles](#list-profiles)
-      * [Inspect one Profile](#inspect-one-profile)
-      * [Full command help](#full-command-help)
-    * [Anonymous / Default Volumes](#anonymous--default-volumes)
-    * [Multi-Host Volumes](#multi-host-volumes)
-      * [Create a profile on host #1](#create-a-profile-on-host-1)
-      * [Use a volume on host #2](#use-a-volume-on-host-2)
-      * [Use the volume on host #3 with
-        zero-copy](#use-the-volume-on-host-3-with-zero-copy)
-    * [Blockbridge Storage](#blockbridge-storage)
-    * [Blockbridge Storage Simulator](#blockbridge-storage-simulator)
-    * [Support](#support)
-
-## Installation
-
-Pull the volume driver image:
-````
-docker pull blockbridge/volume-driver:latest
-````
-
-Clone this repository to run the volume driver startup script:
-````
-git clone https://github.com/blockbridge/blockbridge-docker-volume.git
-cd blockbridge-docker-volume
-````
-
-## Driver Configuration
-
-The volume driver requires two pieces of configuration. It needs to know the
-Blockbridge management node that is providing storage services. And it
-needs an API authorization token to use for authentication.
-
-The Blockbridge storage simulator automatically generates this information when
-it runs for the first time. Retrieve the IP address and API authorization from
-the simulator management node.
+## Quick Start
 
 ````
-# docker logs bbsim-mn
-IP Address:      172.17.42.121
-Admin API Key:   1/4pz/TrwO0l53xY8j6VkorTZu2wJEeaaH5PktWI2AxSXynP9OvA7THw
+docker-compose up
 ````
 
-Configure the volume driver by setting two environment variables.
-
-````
-export BLOCKBRIDGE_API_HOST="172.17.42.121"
-export BLOCKBRIDGE_API_KEY="1/4pz/TrwO0l53xY8j6VkorTZu2wJEeaaH5PktWI2AxSXynP9OvA7THw"
-````
-
-## Start the volume driver
-
-````
-./bin/blockbridge-docker-volume
-````
-
-Alternatively, set the environment and start the driver at the same time:
-
-````
-BLOCKBRIDGE_API_HOST="172.17.42.121" BLOCKBRIDGE_API_KEY="1/4pz/TrwO0l53xY8j6VkorTZu2wJEeaaH5PktWI2AxSXynP9OvA7THw" ./bin/blockbridge-docker-volume
-````
-
-Confirm the driver is running:
-````
-# docker ps
-CONTAINER ID        IMAGE                       COMMAND                CREATED              STATUS              PORTS                                      NAMES
-f9bba845cc12        blockbridge/volume-driver   "./volume-driver.sh"      About a minute ago   Up About a minute                                              blockbridge-volume-driver
-````
+This compose file will automatically connect to the Blockbridge storage
+simulator that is running.
 
 ## Volume Types
 
