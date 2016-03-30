@@ -105,8 +105,8 @@ BLOCKBRIDGE_API_KEY
 ````
 
 Set these environment variables to point to the Blockbridge backend
-storage, and to authenticate with the management API.  The Blockbridge
-simulator, or any other Blockbridge storage can be configured for use
+storage, and to authenticate with the management API.  The [Blockbridge
+storage simulator](https://github.com/blockbridge/blockbridge-simulator), or any other Blockbridge storage can be configured for use
 with the volume driver.
 
 #### Start the volume driver
@@ -114,6 +114,7 @@ with the volume driver.
 ````
 export BLOCKBRIDGE_API_HOST="172.17.42.121"
 export BLOCKBRIDGE_API_KEY="1/4pz/TrwO0l53xY8j6VkorTZu2wJEeaaH5PktWI2AxSXynP9OvA7THw"
+
 ./bin/blockbridge-docker-volume
 ````
 
