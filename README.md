@@ -29,6 +29,9 @@ that runs Docker, including CoreOS and OSX (boot2docker/docker-machine).
 docker-compose up
 ````
 
+The default compose file will automatically connect to a running Blockbridge storage
+simulator.
+
 ## Table of Contents 
 - [Blockbridge Volume Plugin for Docker](#blockbridge-volume-plugin-for-docker)
     - [Quick Start](#quick-start)
@@ -74,9 +77,6 @@ docker-compose up
     - [Blockbridge Storage](#blockbridge-storage)
     - [Blockbridge Storage Simulator](#blockbridge-storage-simulator)
     - [Support](#support)
-
-This compose file will automatically connect to the Blockbridge storage
-simulator that is running.
 
 ## Volume Types
 
