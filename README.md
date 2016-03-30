@@ -359,16 +359,15 @@ Blockbridge volumes are accessible on any host, with no data copy required.
 The Blockbridge volume driver for Docker uses Blockbridge storage services as
 the backend.
 
-* [http://blockbridge.io/docker](http://blockbridge.io/docker)
-* [http://blockbridge.io](http://blockbridge.io)
+* [https://blockbridge.com/docker](https://blockbridge.com/docker)
+* [https://blockbridge.com](https://blockbridge.com)
 
 ## Blockbridge Storage Simulator
 
 The Blockbridge storage backend is available as a simulator running as a Docker
 container, and is free for development and non-commercial use.
 
-* [blockbridge-demo](https://github.com/blockbridge/blockbridge-demo)
-* [blockbridge-demo/simulator/README.md](https://github.com/blockbridge/blockbridge-demo/blob/master/simulator/README.md)
+* [blockbridge-simulator](https://github.com/blockbridge/blockbridge-simulator)
 
 ## Support
 
