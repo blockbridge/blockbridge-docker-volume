@@ -1,8 +1,8 @@
 #!/bin/bash
 ##############################################################################
-# Attempt to disable the host iscsid in order to use iscsid as a container.
+# Attempt to disable the host iscsid in order to use iscsid in a container.
 # This script detects what commands are available and then runs the disable
-# commands. It should work on RHEL7/CentOS7, RHEL6/CentOS6, Ubuntu 14.04.
+# commands. It should work on RHEL7/CentOS7, RHEL6/CentOS6, Ubuntu
 ##############################################################################
 SYSTEMCTL="/usr/bin/systemctl"
 CHKCONFIG="/sbin/chkconfig"
@@ -37,13 +37,19 @@ function disable_rcd()
     sudo service open-iscsi stop
 }
 
-# find best way to disable and disable it
-if [ -e $SYSTEMCTL ]; then
-    disable_systemd
+# find best way to disable it
+function disable()
+{
+    if [ -e $SYSTEMCTL ]; then
+        disable_systemd
 
-elif [ -e $CHKCONFIG ]; then
-    disable_chkconfig
+    elif [ -e $CHKCONFIG ]; then
+        disable_chkconfig
 
-elif [ -e $UPDATERCD ]; then
-    disable_rcd
-fi
+    elif [ -e $UPDATERCD ]; then
+        disable_rcd
+    fi
+}
+
+# disable iscsid
+disable

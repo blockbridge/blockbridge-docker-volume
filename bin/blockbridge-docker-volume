@@ -90,7 +90,7 @@ if [[ -n "$ISCSID" && ! "$ISCSID" =~ "/bb/bin/iscsid" ]]; then
     echo "Found running 'iscsid'. The system iscsid is incompatible with the Blockbridge volume driver."
     echo "Please run the following script to disable it first:"
     echo
-    echo "https://raw.githubusercontent.com/blockbridge/blockbridge-demo/master/iscsid/disable-host-iscsid.sh"
+    echo "curl https://raw.githubusercontent.com/blockbridge/blockbridge-docker-volume/master/bin/disable-host-iscsid.sh | sh"
     exit 1
 fi
 
