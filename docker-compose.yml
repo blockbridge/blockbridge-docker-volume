@@ -1,0 +1,25 @@
+version: '2'
+
+services:
+  blockbridge-volume-driver:
+    image: blockbridge/volume-driver:latest
+    volumes:
+      - /run/docker/plugins/blockbridge:/run/docker/plugins/blockbridge
+      - blockbridge-volumes:/bb/volumes
+      - /var/run/docker.sock:/run/docker.sock
+      - /etc/iscsi:/etc/iscsi
+      - /lib/modules:/lib/modules
+      - /proc/1/ns:/ns-net
+      - /proc/1/ns:/ns-mnt
+    networks:
+      - blockbridgesimulator_storage
+    privileged: true
+    environment:
+      BLOCKBRIDGE_API_HOST: bbsim-mn
+
+volumes:
+  blockbridge-volumes:
+
+networks:
+  blockbridgesimulator_storage:
+    external: true
