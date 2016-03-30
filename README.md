@@ -36,6 +36,11 @@ simulator.
 - [Blockbridge Volume Plugin for Docker](#blockbridge-volume-plugin-for-docker)
     - [Quick Start](#quick-start)
     - [Table of Contents](#table-of-contents)
+    - [Configuration](#configuration)
+        - [Quick Start](#quick-start)
+        - [Configuration required?](#configuration-required)
+            - [Start the volume driver](#start-the-volume-driver)
+- [docker ps](#docker-ps)
     - [Volume Types](#volume-types)
         - [Autovol](#autovol)
         - [Autoclone](#autoclone)
@@ -77,6 +82,47 @@ simulator.
     - [Blockbridge Storage](#blockbridge-storage)
     - [Blockbridge Storage Simulator](#blockbridge-storage-simulator)
     - [Support](#support)
+
+## Configuration
+
+### Quick Start
+For most cases, using the Docker compose file will start the volume
+driver, and connect to the Blockbridge simulator.
+
+````
+docker-compose up
+````
+
+### Configuration required?
+
+For more complicated setups, additional configuration may be required.
+A startup script is provided for these cases. 
+
+Two environment variables are required in order to use the startup script:
+````
+BLOCKBRIDGE_API_HOST
+BLOCKBRIDGE_API_KEY
+````
+
+Set these environment variables to point to the Blockbridge backend
+storage, and to authenticate with the management API.  The Blockbridge
+simulator, or any other Blockbridge storage can be configured for use
+with the volume driver.
+
+#### Start the volume driver
+
+````
+export BLOCKBRIDGE_API_HOST="172.17.42.121"
+export BLOCKBRIDGE_API_KEY="1/4pz/TrwO0l53xY8j6VkorTZu2wJEeaaH5PktWI2AxSXynP9OvA7THw"
+./bin/blockbridge-docker-volume
+
+Confirm the driver is running
+
+````
+# docker ps
+CONTAINER ID        IMAGE                       COMMAND                CREATED              STATUS              PORTS                                      NAMES
+f9bba845cc12        blockbridge/volume-driver   "./volume-driver.sh"   About a minute ago   Up About a minute                                              blockbridge-volume-driver
+````
 
 ## Volume Types
 
