@@ -115,6 +115,7 @@ with the volume driver.
 export BLOCKBRIDGE_API_HOST="172.17.42.121"
 export BLOCKBRIDGE_API_KEY="1/4pz/TrwO0l53xY8j6VkorTZu2wJEeaaH5PktWI2AxSXynP9OvA7THw"
 ./bin/blockbridge-docker-volume
+````
 
 Confirm the driver is running
 
