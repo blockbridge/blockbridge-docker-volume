@@ -14,6 +14,8 @@ services:
     networks:
       - blockbridgesimulator_storage
     privileged: true
+    labels:
+      com.docker.swarm.affinities: '["container!=*blockbridge-volume-driver*","container!=*bbsim*"]'
     environment:
       BLOCKBRIDGE_API_HOST: bbsim-mn
 

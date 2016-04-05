@@ -85,16 +85,20 @@ module Helpers
       File.join(volumes_root, name)
     end
 
+    def api_token_default
+      "default"
+    end
+
     def api_token
-      ENV['BLOCKBRIDGE_API_KEY'] || "default"
+      Blockbridge::Config.api_token || ENV['BLOCKBRIDGE_API_KEY'] || api_token_default
     end
 
     def api_host
-      ENV['BLOCKBRIDGE_API_HOST']
+      Blockbridge::Config.api_host || ENV['BLOCKBRIDGE_API_HOST']
     end
 
     def api_url
-      if ENV['BLOCKBRIDGE_API_KEY']
+      if api_token != api_token_default
         "https://#{api_host}/api"
       else
         "https://#{Resolv.getaddress(api_host)}:9999/api"

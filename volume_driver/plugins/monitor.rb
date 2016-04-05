@@ -22,7 +22,7 @@ module Blockbridge
     end
 
     def monitor_interval_s
-      ENV['BLOCKBRIDGE_MONITOR_INTERVAL_S'] || 30
+      ENV['BLOCKBRIDGE_MONITOR_INTERVAL_S'] || 10
     end
 
     def run
@@ -103,7 +103,7 @@ module Blockbridge
       volume_cache_check
     rescue => e
       msg = e.message.chomp.squeeze("\n")
-      msg.each_line do |m| logger.error(m.chomp) end
+      msg.each_line do |m| logger.error "monitor: #{m.chomp}" end
       #e.backtrace.each do |b| logger.error(b) end
     end
   end

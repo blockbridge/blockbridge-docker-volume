@@ -20,6 +20,7 @@ class VolumeDriver
     use Goliath::Rack::Render # auto-negotiate response format
     use Goliath::Rack::Params # parse & merge query and body parameters
 
+    plugin Blockbridge::Config
     plugin Blockbridge::VolumeMonitor
 
     # process api call
