@@ -38,7 +38,8 @@ simulator.
     - [Table of Contents](#table-of-contents)
     - [Configuration](#configuration)
         - [Quick Start](#quick-start)
-        - [Configuration required?](#configuration-required)
+        - [Swarm Quick Start](#swarm-quick-start)
+        - [Additional Configuration required?](#additional-configuration-required)
             - [Start the volume driver](#start-the-volume-driver)
 - [docker ps](#docker-ps)
     - [Volume Types](#volume-types)
@@ -93,10 +94,23 @@ driver, and connect to the Blockbridge simulator.
 docker-compose up
 ````
 
-### Configuration required?
+### Swarm Quick Start
+Running the Blockbridge volume driver in a swarm is easy by scaling the volume
+driver to run on each node in the swarm. Determine the number of nodes in your
+swarm, and scale the driver. The driver will discover the Blockbridge storage
+simulator running in the swarm and configure itself.
 
-For more complicated setups, additional configuration may be required.
-A startup script is provided for these cases. 
+For a 5-node cluster:
+
+````
+docker-compose scale blockbridge-volume-driver=5
+````
+
+### Additional Configuration required?
+
+For running against Blockbridge storage (not in a container), or for more
+complicated setups, additional configuration may be required.  A startup script
+is provided for these cases. 
 
 Two environment variables are required in order to use the startup script:
 ````
