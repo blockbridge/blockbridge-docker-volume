@@ -12,10 +12,10 @@ services:
       - /proc/1/ns:/ns-net
       - /proc/1/ns:/ns-mnt
     networks:
-      - blockbridgesimulator_storage
+      - blockbridgesimulator_discovery
     privileged: true
     labels:
-      com.docker.swarm.affinities: '["container!=*blockbridge-volume-driver*","container!=*bbsim*"]'
+      com.docker.swarm.affinities: '["container!=*blockbridge-volume-driver*"]'
     environment:
       BLOCKBRIDGE_API_HOST: bbsim-mn
 
@@ -23,5 +23,5 @@ volumes:
   blockbridge-volumes:
 
 networks:
-  blockbridgesimulator_storage:
+  blockbridgesimulator_discovery:
     external: true
