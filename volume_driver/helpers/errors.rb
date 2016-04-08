@@ -21,4 +21,5 @@ module Blockbridge
   class ServiceUnavailable < Error; end                                                                
   class CommandError < Error; end
   class ResourcesUnavailable < Error; end
+  class VolumeInuse < Error; end
 end

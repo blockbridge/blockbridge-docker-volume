@@ -175,6 +175,10 @@ module Helpers
       info
     end
 
+    def volume_lookup_one
+      volume_lookup.first
+    end
+
     def mnt_path_map(name = nil)
       return "" if name.nil?
       return "" unless mount_needed?(name)
@@ -246,7 +250,10 @@ module Helpers
 
     def volume_remove(opts = {})
       return if vol_cache_enabled?(vol_name)
-      volume_lookup
+      vol = volume_lookup_one
+      if bb_is_attached(vol[:user], vol[:name])
+        raise Blockbridge::VolumeInuse, "Volume cannot be removed; it is still in-use" 
+      end
       if opts[:async]
         volume_start_async_remove
       else

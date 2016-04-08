@@ -73,11 +73,15 @@ module Blockbridge
       if vol_info
         return unless vol_info[:data] && vol_info[:data][:deleted]
         return unless ((Time.now.tv_sec - vol_info[:data][:deleted]) > monitor_interval_s)
-        res = cmd_exec_raw("bb_remove", vol_env)
-        cmd_res_dump(res, vol[:name])
+        raise Blockbridge::VolumeInuse if bb_is_attached(vol[:user], vol[:name])
+        bb_remove(vol[:user], vol[:name])
       end
       vol_cache_rm(vol[:name])
       logger.info "#{vol[:name]} async removed"
+    rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound
+      logger.debug "#{vol[:name]} async remove: volume not found"
+    rescue Blockbridge::VolumeInuse
+      logger.debug "#{vol[:name]} async remove: not removing; volume still in use"
     rescue Blockbridge::CommandError => e
       logger.debug "#{vol[:name]} async remove: #{e.message}"
       if e.message.include? "not found"
@@ -104,7 +108,7 @@ module Blockbridge
     rescue => e
       msg = e.message.chomp.squeeze("\n")
       msg.each_line do |m| logger.error "monitor: #{m.chomp}" end
-      #e.backtrace.each do |b| logger.error(b) end
+      e.backtrace.each do |b| logger.error(b) end
     end
   end
 end
