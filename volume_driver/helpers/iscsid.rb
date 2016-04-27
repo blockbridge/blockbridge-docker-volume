@@ -17,7 +17,7 @@ module Helpers
     def stop_iscsid
       return unless Iscsid.iscsid
       Process.kill("TERM", Iscsid.iscsid)
-      Process.kill("KILL", Helpers::Iscsid.iscsid)
+      Process.kill("KILL", Iscsid.iscsid)
       Process.detach .iscsid
     end
 
@@ -33,11 +33,11 @@ module Helpers
       return if Iscsid.iscsid
       return if iscsid_running? 
 
-      Helpers::Iscsid.iscsid = POSIX::Spawn::spawn('/bb/bin/iscsid -f',
-                                                   :out=>["/tmp/iscsid.out.log", "w"],
-                                                   :err=>["/tmp/iscsid.err.log", "w"])
+      Iscsid.iscsid = POSIX::Spawn::spawn('/bb/bin/iscsid -f',
+                                          :out=>["/tmp/iscsid.out.log", "w"],
+                                          :err=>["/tmp/iscsid.err.log", "w"])
 
-      raise "Unable to start iscsid" unless Helpers::Iscsid.iscsid
+      raise "Unable to start iscsid" unless Iscsid.iscsid
     end
   end
 end

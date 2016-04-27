@@ -10,6 +10,8 @@ class API::Profile < Grape::API
     requires :name,         type: String,  desc: 'profile name'
     requires :user,         type: String,  desc: 'volume user (owner)'
     optional :type,         type: String,  desc: 'volume type', default: 'autovol', volume_type: true
+    optional :access_token, type: String,  desc: 'API access token for user authentication'
+    optional :transport,    type: String,  desc: 'specify transport security (tls, insecure)', transport_type: true
     optional :capacity,     type: String,  desc: 'volume capacity'
     optional :iops,         type: Integer, desc: 'volume provisioning IOPS (QoS)'
     optional :attributes,   type: String,  desc: 'volume attributes'

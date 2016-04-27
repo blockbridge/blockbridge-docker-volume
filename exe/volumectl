@@ -148,8 +148,12 @@ class CreateCommand < Command
     enum_check(val, %w(autovol autoclone snappy))
   end
   option '--user', 'USER', 'volume owner'
+  option '--access-token', 'TOKEN', 'API access token for user authentication'
   option '--capacity', 'CAPACITY', 'request volume capacity (bytes, N GiB, etc.)'
   option '--iops', 'IOPS', 'requested service IOPS'
+  option '--transport', 'TRANSPORT', 'requested transport (tls, insecure, etc.)' do |val|
+    enum_check(val, %w(tls insecure))
+  end
   option '--clone-basis', 'CLONE-BASIS', '(autoclone) clone basis disk'
   option '--snapshot-tag', 'SNAPSHOT-TAG', '(autoclone) clone basis disk snapshot tag'
   option '--snapshot-interval-hours', 'SNAPSHOT-INTERVAL-HOURS', '(snappy) take snapshot every interval'
@@ -164,8 +168,10 @@ class CreateCommand < Command
       h[:name]         = name 
       h[:type]         = type
       h[:user]         = user
+      h[:access_token] = access_token
       h[:capacity]     = capacity
       h[:iops]         = iops
+      h[:transport]    = transport
       h[:attributes]   = attributes.join(' ') if attributes.length > 0
       h[:clone_basis]  = clone_basis
       h[:snapshot_tag] = snapshot_tag
@@ -177,6 +183,7 @@ class CreateCommand < Command
   def volume_create_params
     create_params.tap { |h|
       h[:profile] = profile
+      h[:otp]     = otp
     }.reject { |_, v| v.nil? }
   end
 end
@@ -184,6 +191,7 @@ end
 class VolumeCreate < CreateCommand
   option '--name', 'VOLUME', 'volume name', :required => true
   option '--profile', 'PROFILE', 'storage profile'
+  option '--otp', 'OTP', 'one time password authentication'
   parameter '[ATTRIBUTES] ...', 'provisioning attributes (+tag to include, -tag to exclude)', :attribute_name => :attributes
 
   def exec
@@ -193,9 +201,17 @@ end
 
 class VolumeRemove < Command
   option '--name', 'VOLUME', 'volume name', :required => true
+  option '--otp', 'OTP', 'one time password authentication'
+
+  def volume_remove_params
+    Hash.new.tap { |h|
+      h[:name] = name
+      h[:otp]  = otp
+    }.reject { |_, v| v.nil? }
+  end
 
   def exec
-    volume_api.delete(name: name).body
+    volume_api.delete(volume_remove_params).body
   end
 end
 

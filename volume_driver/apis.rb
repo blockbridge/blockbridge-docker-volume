@@ -82,6 +82,16 @@ class VolumeType < Grape::Validations::Base
   end
 end
 
+class TransportType < Grape::Validations::Base
+  def validate_param!(attr_name, params)
+    unless params[attr_name] =~ /tls|insecure/
+      fail Grape::Exceptions::Validation,
+        params: [@scope.full_name(attr_name)],
+        message: "Must be one of 'tls', 'insecure'"
+    end
+  end
+end
+
 # Import support APIs
 require_rel 'apis/*.rb'
 
@@ -91,10 +101,12 @@ class API::VolumeDriver < Grape::API
   default_format :json
 
   rescue_from Grape::Exceptions::ValidationErrors do |e|
+    env.logger.info e.message.chomp.squeeze("\n")
     error!({ Err: e.message, validation_failures: e }, 400)
   end
 
   rescue_from Blockbridge::NotFound do |e|
+    env.logger.info e.message.chomp.squeeze("\n")
     error!({ Err: e.message }, 400)
   end
 
@@ -106,6 +118,7 @@ class API::VolumeDriver < Grape::API
   end
 
   rescue_from Blockbridge::ResourcesUnavailable do |e|
+    env.logger.info e.message.chomp.squeeze("\n")
     error!({ Err: e.message }, 400)
   end
 
