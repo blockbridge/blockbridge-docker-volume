@@ -6,7 +6,7 @@ module Helpers
   module Profile
     def profile_env
       env = { 
-        "BLOCKBRIDGE_API_KEY"        => api_token,
+        "BLOCKBRIDGE_API_KEY"        => system_access_token,
         "BLOCKBRIDGE_API_HOST"       => api_host,
         "BLOCKBRIDGE_API_URL"        => api_url,
       }

@@ -13,15 +13,14 @@ module Helpers
             "BLOCKBRIDGE_VOLUME_NAME"    => vol_name,
             "BLOCKBRIDGE_VOLUME_REF"     => volume_ref_name,
             "BLOCKBRIDGE_CACHE_REF"      => vol_cache_ref,
+            "BLOCKBRIDGE_HOST_REF"       => vol_host_ref,
             "BLOCKBRIDGE_VOLUME_PARAMS"  => MultiJson.dump(volume_params),
             "BLOCKBRIDGE_VOLUME_TYPE"    => volume_type,
             "BLOCKBRIDGE_VOLUME_PATH"    => vol_path,
             "BLOCKBRIDGE_MOUNT_PATH"     => mnt_path,
             "BLOCKBRIDGE_MODULES_EXPORT" => "1",
-            "BLOCKBRIDGE_API_KEY"        => api_token,
             "BLOCKBRIDGE_API_HOST"       => api_host,
             "BLOCKBRIDGE_API_URL"        => api_url,
-            "BLOCKBRIDGE_API_SU"         => volume_user,
           }
 
           # set volume params in environment
@@ -31,16 +30,32 @@ module Helpers
 
           env
         end
+      @volume_env["BLOCKBRIDGE_API_KEY"] = volume_access_token
+      @volume_env["BLOCKBRIDGE_API_SU"]  = volume_su_user
+      @volume_env["BLOCKBRIDGE_HOST_TRANSPORT"] = "--#{volume_params[:transport].downcase}" if volume_params[:transport]
+      @volume_env.reject { |k, v| v.nil? }
     end
 
     def volume_cmd_exec(cmd)
       cmd_exec(cmd, volume_env)
     end
 
+    def vol_host_ref(name = nil)
+      "#{volume_ref_name(name)}-hostinfo"
+    end
+
+    def auth_env
+      {
+        "BLOCKBRIDGE_API_KEY" => nil
+      }
+    end
+
     def vol_param_keys
       [
         :type,
         :user,
+        :access_token,
+        :transport,
         :capacity,
         :attributes,
         :iops,
@@ -55,8 +70,12 @@ module Helpers
       "docker-volume-"
     end
 
-    def volume_ref_name
-      "#{volume_ref_prefix}#{vol_name}"
+    def volume_ref_name(name = nil)
+      if name
+        "#{volume_ref_prefix}#{name}"
+      else
+        "#{volume_ref_prefix}#{vol_name}"
+      end
     end
 
     def volume_user
@@ -66,6 +85,15 @@ module Helpers
           cmd_exec("bb -k user info --user #{volume_params[:user]} -X login -X serial --tabular", profile_env)
           volume_params[:user]
         end
+    end
+
+    def auth_login(token, otp = nil, su = nil)
+      logger.info "Attempting login #{token} #{otp} #{su}"
+      cmd = ['bb', '-k', 'auth', 'login', '--user', token, '--noninteractive', '--disable-netrc', '--expires-in', '60' ]
+      cmd.concat ['--otp', otp ] if otp
+      cmd.concat ['--su', su] if su
+      token = cmd_exec_raw(*cmd, auth_env)
+      token.chomp
     end
 
     def volume_type
@@ -109,9 +137,12 @@ module Helpers
         env_file_params
       elsif volume_profile
         profile = volume_profile.reject { |k, v| k == :name }
+        opts.each { |key,val| profile[key] = val if vol_param_keys.include? key } if opts
         logger.info "#{vol_name} using volume info from profile #{volume_profile[:name]}: #{profile}"
         profile
       elsif env_file_default
+        env_file_default_params
+        opts.each { |key,val| env_file_default_params[key] = val if vol_param_keys.include? key } if opts
         logger.info "#{vol_name} using volume info from environment file #{env_file_default}: #{env_file_default_params}"
         env_file_default_params
       else
@@ -143,11 +174,14 @@ module Helpers
       xmd[:tags].select { |t| t.include? 'docker-host' }.map { |t| t.gsub('docker-host:', '') }.join(',')
     end
 
-    def volume_info_map(info)
+    def volume_info_map(info, raw = false)
       info.map do |xmd|
         v = xmd[:data][:volume]
-        v[:hosts] = volume_hosts(xmd) if volume_hosts(xmd).length > 0
-        v[:deleted] = xmd[:data][:deleted] if xmd[:data][:deleted]
+        unless raw
+          v[:hosts] = volume_hosts(xmd) if volume_hosts(xmd).length > 0
+          v[:deleted] = xmd[:data][:deleted] if xmd[:data][:deleted]
+          v.delete(:scope_token)
+        end
         v
       end
     end
@@ -158,7 +192,7 @@ module Helpers
       name
     end
 
-    def volume_info
+    def volume_info(raw = false)
       if vol_name.nil?
         select = "|d| d[:ref].include?(\"#{volume_ref_prefix}\")"
       else
@@ -166,17 +200,23 @@ module Helpers
       end
       cmd = "bb -k xmd info --process 'puts MultiJson.dump(data.select { #{select} })'"
       info = profile_cmd_exec(cmd)
-      volume_info_map(info)
+      volume_info_map(info, raw)
     end
 
-    def volume_lookup
-      info = volume_info
+    def volume_lookup(raw = false)
+      info = volume_info(raw)
       raise Blockbridge::NotFound, "No volume named #{vol_name} found" if info.length == 0
       info
     end
 
-    def volume_lookup_one
-      volume_lookup.first
+    def volume_lookup_all
+      volume_lookup
+    rescue
+      []
+    end
+
+    def volume_lookup_one(raw = false)
+      volume_lookup(raw).first
     end
 
     def mnt_path_map(name = nil)
@@ -198,12 +238,12 @@ module Helpers
       if vol_cache_enabled?(vol_name)
         v = vol_cache_get(vol_name)
         {
-          Name:       v[:name],
+          Name:       params_name || v[:name],
           Mountpoint: mnt_path_map(v[:name])
         }
       elsif (v = volume_lookup.first)
         {
-          Name:       v[:name],
+          Name:       params_name || v[:name],
           Mountpoint: mnt_path_map(v[:name])
         }
       end
@@ -239,19 +279,77 @@ module Helpers
       logger.info "#{vol_name} removed"
     end
 
+    def volume_scoped
+      case env['REQUEST_URI']
+      when '/VolumeDriver.Unmount'
+        true
+      else
+        false
+      end
+    end
+
+    def volume_access_token
+      # if otp specified, use session token. Either auth login to create one or use valid one.
+      # - if can't SU, then it will fail. RETURN good error here saying can't SU
+      #
+      # if otp not specified, use user token. If not user token, use system + su
+      # - if otp is required by user, it will fail. RETURN GOOD error here saying OTP required.
+      #
+      # - User has OTP enabled
+      # - User has SU disabled
+      # - User token should be created with respect OTP
+      # - System token should be created with respect OTP
+      if volume_scoped && (scope_token = volume_scope_token)
+        token = scope_token
+      elsif (otp = params_opts[:otp])
+        if session_token_valid? otp
+          token = get_session_token(otp)
+        else
+          if volume_params[:access_token]
+            # login otp with user access token
+            token = auth_login(volume_params[:access_token], otp)
+          else
+            # login otp with system token and SU
+            token = auth_login(system_access_token, otp, volume_user)
+          end
+          set_session_token(otp, token)
+        end
+      else
+        if volume_params[:access_token]
+          token = volume_params[:access_token]
+        else
+          token = system_access_token
+        end
+
+        # login to check for otp required
+        auth_login(token)
+      end
+      token
+    end
+
+    def volume_su_user
+      return if volume_access_token != system_access_token
+      volume_user
+    end
+
+    def volume_scope_token
+      volume = volume_info(true).first
+      return volume[:scope_token]
+    end
+
     def volume_start_async_remove
       params = {
         mode: 'patch',
         data: [ { op: 'add', path: '/deleted', value: Time.now.tv_sec } ]
       }
-      bbapi(volume_user).xmd.update(volume_ref_name, params)
+      bbapi(volume_user, volume_scope_token).xmd.update(volume_ref_name, params)
       vol_cache_add(vol_name, volume_params.merge({deleted: true, env: volume_env}), true)
     end
 
     def volume_remove(opts = {})
       return if vol_cache_enabled?(vol_name)
-      vol = volume_lookup_one
-      if bb_is_attached(vol[:user], vol[:name])
+      vol_info = volume_lookup_one(true)
+      if bb_get_attached(vol_info[:name], vol_info[:user], vol_info[:scope_token])
         raise Blockbridge::VolumeInuse, "Volume cannot be removed; it is still in-use" 
       end
       if opts[:async]

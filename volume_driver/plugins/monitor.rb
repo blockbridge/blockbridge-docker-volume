@@ -3,7 +3,7 @@
 # file.
 
 module Blockbridge
-  class VolumeMonitor
+  class VolumeCacheMonitor
     include Helpers
     attr_reader :config
     attr_reader :logger
@@ -26,7 +26,7 @@ module Blockbridge
     end
 
     def run
-      EM::Synchrony.run_and_add_periodic_timer(monitor_interval_s, &method(:volume_monitor))
+      EM::Synchrony.run_and_add_periodic_timer(monitor_interval_s, &method(:volume_cache_monitor))
     end
 
     def reset
@@ -46,16 +46,6 @@ module Blockbridge
       logger.error "Failed to remove docker cached volume: #{name}: #{e.message}"
     end
 
-    def volume_user_lookup(user)
-      raise Blockbridge::Notfound if bbapi.user_profile.list(login: user).length == 0
-    end
-
-    def volume_lookup(vol)
-      volume_user_lookup(vol[:user])
-      bbapi(vol[:user]).xmd.info("docker-volume-#{vol[:name]}")
-    rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound
-    end
-
     def cache_status_create
       xmd = bbapi.xmd.info(vol_cache_ref) rescue nil
       return xmd unless xmd.nil?
@@ -71,10 +61,10 @@ module Blockbridge
 
     def volume_async_remove(vol, vol_info, vol_env)
       if vol_info
-        return unless vol_info[:data] && vol_info[:data][:deleted]
-        return unless ((Time.now.tv_sec - vol_info[:data][:deleted]) > monitor_interval_s)
-        raise Blockbridge::VolumeInuse if bb_is_attached(vol[:user], vol[:name])
-        bb_remove(vol[:user], vol[:name])
+        return unless vol_info[:deleted]
+        return unless ((Time.now.tv_sec - vol_info[:deleted]) > monitor_interval_s)
+        raise Blockbridge::VolumeInuse if bb_get_attached(vol[:name], vol[:user], vol_info[:scope_token])
+        bb_remove_vol(vol[:name], vol[:user], vol_info[:scope_token])
       end
       vol_cache_rm(vol[:name])
       logger.info "#{vol[:name]} async removed"
@@ -90,24 +80,24 @@ module Blockbridge
       raise
     end
 
-    def volume_cache_check
+    def volume_cache_monitor
       new_cache_version = cache_version_lookup
       return unless new_cache_version != cache_version
       logger.info "Validating volume cache"
       revalidate = false
       vol_cache_foreach do |v, vol|
-        volume_invalidate(vol[:name]) unless (vol_info = volume_lookup(vol))
+        volume_invalidate(vol[:name]) unless (vol_info = bb_lookup_vol_info(vol))
         revalidate = true if vol[:deleted]
         volume_async_remove(vol, vol_info, vol[:env]) if vol[:deleted]
       end
       @cache_version = new_cache_version unless revalidate
     end
 
-    def volume_monitor
-      volume_cache_check
+    def volume_cache_monitor_run
+      volume_cache_monitor
     rescue => e
       msg = e.message.chomp.squeeze("\n")
-      msg.each_line do |m| logger.error "monitor: #{m.chomp}" end
+      msg.each_line do |m| logger.error "cache monitor: #{m.chomp}" end
       e.backtrace.each do |b| logger.error(b) end
     end
   end

@@ -21,7 +21,8 @@ class VolumeDriver
     use Goliath::Rack::Params # parse & merge query and body parameters
 
     plugin Blockbridge::Config
-    plugin Blockbridge::VolumeMonitor
+    plugin Blockbridge::VolumeCacheMonitor
+    plugin Blockbridge::VolumeHostinfo
 
     # process api call
     def response(env)

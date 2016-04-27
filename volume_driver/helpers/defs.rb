@@ -13,7 +13,7 @@ module Helpers
     end
 
     def vol_name
-      @vol_name ||= params[:Name] || params[:name]
+      @vol_name ||= parse_params_name || params[:Name] || params[:name]
     end
 
     def profile_name
@@ -85,12 +85,12 @@ module Helpers
       File.join(volumes_root, name)
     end
 
-    def api_token_default
-      "default"
+    def access_token_default
+      "--unset-default--"
     end
 
-    def api_token
-      Blockbridge::Config.api_token || ENV['BLOCKBRIDGE_API_KEY'] || api_token_default
+    def system_access_token
+      Blockbridge::Config.access_token || ENV['BLOCKBRIDGE_API_KEY'] || access_token_default
     end
 
     def api_host
@@ -98,7 +98,7 @@ module Helpers
     end
 
     def api_url
-      if api_token != api_token_default
+      if system_access_token != access_token_default
         "https://#{api_host}/api"
       else
         "https://#{Resolv.getaddress(api_host)}:9999/api"
@@ -112,7 +112,7 @@ module Helpers
 
     def params_opts
       return params['Opts'].deep_symbolize_keys if params['Opts']
-      return params
+      return params.deep_symbolize_keys
     end
 
     def params_type

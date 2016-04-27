@@ -27,7 +27,7 @@ module Helpers
         f.fsync rescue nil
       end
       File.rename(tmp_file, vol_cache_path(name))
-      Blockbridge::VolumeMonitor.cache.reset
+      Blockbridge::VolumeCacheMonitor.cache.reset
     rescue => e
       logger.info "vol_cache_add failed: #{e.message}"
     end

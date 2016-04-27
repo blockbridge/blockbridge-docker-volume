@@ -7,6 +7,7 @@ class API::DockerPlugin < Grape::API
 
   before do
     status 200
+    parse_params(params)
     start_iscsid
   end
 
@@ -21,11 +22,14 @@ class API::DockerPlugin < Grape::API
   resource 'VolumeDriver.Create' do
     desc "Create a Volume"
     params do
-      requires :Name,       type: String, desc: "Volume Name"
-      optional :Opts, type: Hash, desc: "Volume Options" do
-        optional :profile,      type: String,  desc: "volume profile"
+      requires :Name,       type: String, desc: 'Volume Name'
+      optional :Opts, type: Hash, desc: 'Volume Options' do
+        optional :profile,      type: String,  desc: 'volume profile'
         optional :type,         type: String,  desc: 'volume type', volume_type: true
         optional :user,         type: String,  desc: 'volume user (owner)'
+        optional :otp,          type: String,  desc: 'volume one time password (OTP)'
+        optional :transport,    type: String,  desc: 'specify transport security (tls, insecure)', transport_type: true
+        optional :access_token, type: String,  desc: 'API access token for user authentication'
         optional :capacity,     type: String,  desc: 'volume provisioning capacity'
         optional :iops,         type: Integer, desc: 'volume provisioning IOPS (QoS)'
         optional :attributes,   type: String,  desc: 'volume provisioning attributes'
@@ -49,7 +53,10 @@ class API::DockerPlugin < Grape::API
   resource 'VolumeDriver.Remove' do
     desc "Remove a Volume"
     params do
-      requires :Name, type: String, desc: "Volume Name"
+      requires :Name, type: String, desc: 'Volume Name'
+      optional :Opts, type: Hash, desc: 'Volume Options' do
+        optional :otp, type: String,  desc: 'volume one time password (OTP)'
+      end
     end
     post do
       synchronize do
@@ -63,6 +70,9 @@ class API::DockerPlugin < Grape::API
     desc "Mount a Volume"
     params do
       requires :Name, type: String, desc: "Volume Name"
+      optional :Opts, type: Hash, desc: 'Volume Options' do
+        optional :otp, type: String,  desc: 'volume one time password (OTP)'
+      end
     end
     post do
       synchronize do
