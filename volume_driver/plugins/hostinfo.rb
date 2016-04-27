@@ -43,6 +43,7 @@ module Blockbridge
           hostinfo: {
             :_schema => "terminal",
             :data    => {
+              title: 'Docker Overview',
               ongoing: false,
               css: {
                 'min-height' => '25px',
@@ -194,7 +195,6 @@ module Blockbridge
         end
       end
 
-      info.push ""
       info
     end
 
