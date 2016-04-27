@@ -10,3 +10,6 @@ volume-driver:
 
 nocache:
 	docker build --no-cache -t blockbridge/volume-driver .
+
+readme:
+	@md-toc-filter README.md.raw > README.md

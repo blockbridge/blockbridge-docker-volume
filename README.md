@@ -1,6 +1,6 @@
 # Blockbridge Volume Plugin for Docker
 
-Version 3.1
+Version 3.3
 
 The Blockbridge volume driver integrates Docker with Blockbridge storage
 services in single and multi-host Docker deployments. Using Blockbridge enables
@@ -119,8 +119,8 @@ BLOCKBRIDGE_API_KEY
 ````
 
 Set these environment variables to point to the Blockbridge backend
-storage, and to authenticate with the management API.  The [Blockbridge
-storage simulator](https://github.com/blockbridge/blockbridge-simulator), or any other Blockbridge storage can be configured for use
+storage, and to authenticate with the management API.  The Blockbridge
+simulator, or any other Blockbridge storage can be configured for use
 with the volume driver.
 
 #### Start the volume driver
