@@ -22,14 +22,6 @@ module Helpers
       end
     end
 
-    def url
-      if api_host
-        "https://#{api_host}/api"
-      elsif api_url
-        api_url
-      end
-    end
-
     def client_params(user, user_token)
       Hash.new.tap do |p|
         p[:user] = user || ''
@@ -38,7 +30,7 @@ module Helpers
             'X-Blockbridge-SU' => user,
           }
         end
-        p[:url] = url
+        p[:url] = api_url
       end
     end
 
