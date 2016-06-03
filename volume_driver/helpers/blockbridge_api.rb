@@ -59,7 +59,7 @@ module Helpers
     end
 
     def bb_lookup_user(user)
-      raise Blockbridge::Notfound if bbapi.user_profile.list(login: user).length == 0
+      raise Blockbridge::NotFound if bbapi.user_profile.list(login: user).length == 0
     end
 
     def bb_lookup_vol_info(vol)

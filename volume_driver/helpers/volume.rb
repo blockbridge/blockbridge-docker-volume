@@ -41,7 +41,11 @@ module Helpers
     end
 
     def vol_host_ref(name = nil)
-      "#{volume_ref_name(name)}-hostinfo"
+      if name
+        "docker-volumehostinfo-#{name}"
+      else
+        "docker-volumehostinfo-#{vol_name}"
+      end
     end
 
     def auth_env
@@ -176,7 +180,7 @@ module Helpers
 
     def volume_info_map(info, raw = false)
       info.map do |xmd|
-        v = xmd[:data][:volume]
+        next unless (v = xmd[:data][:volume])
         unless raw
           v[:hosts] = volume_hosts(xmd) if volume_hosts(xmd).length > 0
           v[:deleted] = xmd[:data][:deleted] if xmd[:data][:deleted]
