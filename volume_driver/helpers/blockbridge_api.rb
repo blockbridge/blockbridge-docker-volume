@@ -6,12 +6,34 @@ require 'blockbridge/api'
 
 module Helpers
   module BlockbridgeApi
-    def self.bbapi_client
-      @@bbapi_client ||= {}
+    def self.client
+      @@client ||= {}
     end
 
-    def bbapi_client_handle(user, user_token)
-      "#{access_token(user_token)}:#{user}"
+    def self.session
+      @@session ||= {}
+    end
+
+    def session_token_valid?(otp)
+      return unless BlockbridgeApi.session[vol_name]
+      return unless BlockbridgeApi.session[vol_name][:otp] == otp
+      true
+    end
+
+    def get_session_token(otp)
+      return unless session_token_valid?(otp)
+      BlockbridgeApi.session[vol_name][:token]
+    end
+
+    def set_session_token(otp, token)
+      BlockbridgeApi.session[vol_name] = {
+        otp:   otp,
+        token: token,
+      }
+    end
+
+    def bbapi_client_handle(user, user_token, otp)
+      "#{access_token(user_token)}:#{user}:#{otp}"
     end
 
     def access_token(user_token)
@@ -22,7 +44,11 @@ module Helpers
       end
     end
 
-    def client_params(user, user_token)
+    def session_token_expires_in
+      60
+    end
+
+    def client_params(user, user_token, otp)
       Hash.new.tap do |p|
         p[:user] = user || ''
         if user && user_token.nil?
@@ -30,16 +56,25 @@ module Helpers
             'X-Blockbridge-SU' => user,
           }
         end
-        p[:url] = api_url
+        if otp
+          p[:default_headers] ||= {}
+          p[:default_headers]['X-Blockbridge-OTP'] = otp
+        end
+        p[:url] = api_url(access_token(user_token))
       end
     end
 
-    def bbapi(user = nil, user_token = nil)
-      BlockbridgeApi.bbapi_client[bbapi_client_handle(user, user_token)] ||=
+    def bbapi(user = nil, user_token = nil, otp = nil)
+      BlockbridgeApi.client[bbapi_client_handle(user, user_token, otp)] ||=
         begin
           Blockbridge::Api::Client.defaults[:ssl_verify_peer] = false
-          Blockbridge::Api::Client.new_oauth(access_token(user_token),
-                                             client_params(user, user_token))
+          api = Blockbridge::Api::Client.new_oauth(access_token(user_token),
+                                                   client_params(user, user_token, otp))
+          if otp
+            authz = api.oauth2_token.create(expires_in: session_token_expires_in)
+            set_session_token(otp, authz.access_token)
+          end
+          api
         end
     end
 

@@ -31,6 +31,7 @@ module Helpers
           env
         end
       @volume_env["BLOCKBRIDGE_API_KEY"] = volume_access_token
+      @volume_env["BLOCKBRIDGE_API_URL"] = api_url(@volume_env["BLOCKBRIDGE_API_KEY"])
       @volume_env["BLOCKBRIDGE_API_SU"]  = volume_su_user
       @volume_env["BLOCKBRIDGE_HOST_TRANSPORT"] = "--#{volume_params[:transport].downcase}" if volume_params[:transport]
       @volume_env.reject { |k, v| v.nil? }
@@ -46,12 +47,6 @@ module Helpers
       else
         "docker-volumehostinfo-#{vol_name}"
       end
-    end
-
-    def auth_env
-      {
-        "BLOCKBRIDGE_API_KEY" => nil
-      }
     end
 
     def vol_param_keys
@@ -89,15 +84,6 @@ module Helpers
           cmd_exec("bb -k user info --user #{volume_params[:user]} -X login -X serial --tabular", profile_env)
           volume_params[:user]
         end
-    end
-
-    def auth_login(token, otp = nil, su = nil)
-      logger.info "Attempting login #{token} #{otp} #{su}"
-      cmd = ['bb', '-k', 'auth', 'login', '--user', token, '--noninteractive', '--disable-netrc', '--expires-in', '60' ]
-      cmd.concat ['--otp', otp ] if otp
-      cmd.concat ['--su', su] if su
-      token = cmd_exec_raw(*cmd, auth_env)
-      token.chomp
     end
 
     def volume_type
@@ -311,12 +297,12 @@ module Helpers
         else
           if volume_params[:access_token]
             # login otp with user access token
-            token = auth_login(volume_params[:access_token], otp)
+            bbapi(nil, volume_params[:access_token], otp)
           else
             # login otp with system token and SU
-            token = auth_login(system_access_token, otp, volume_user)
+            bbapi(volume_user, system_access_token, otp)
           end
-          set_session_token(otp, token)
+          token = get_session_token(otp)
         end
       else
         if volume_params[:access_token]
@@ -326,7 +312,7 @@ module Helpers
         end
 
         # login to check for otp required
-        auth_login(token)
+        bbapi(nil, token)
       end
       token
     end
@@ -346,7 +332,7 @@ module Helpers
         mode: 'patch',
         data: [ { op: 'add', path: '/deleted', value: Time.now.tv_sec } ]
       }
-      bbapi(volume_user, volume_scope_token).xmd.update(volume_ref_name, params)
+      bbapi(volume_user, volume_access_token).xmd.update(volume_ref_name, params)
       vol_cache_add(vol_name, volume_params.merge({deleted: true, env: volume_env}), true)
     end
 

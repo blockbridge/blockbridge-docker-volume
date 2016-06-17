@@ -97,11 +97,21 @@ module Helpers
       Blockbridge::Config.api_host || ENV['BLOCKBRIDGE_API_HOST']
     end
 
-    def api_url
-      if system_access_token != access_token_default
-        "https://#{api_host}/api"
+    def api_host_url
+      "https://#{Resolv.getaddress(api_host)}/api"
+    end
+
+    def api_host_internal_url
+      "https://#{Resolv.getaddress(api_host)}:9999/api"
+    end
+
+    def api_url(access_token = nil)
+      if access_token && access_token != system_access_token
+        api_host_url
+      elsif system_access_token != access_token_default
+        api_host_url
       else
-        "https://#{Resolv.getaddress(api_host)}:9999/api"
+        api_host_internal_url
       end
     end
 

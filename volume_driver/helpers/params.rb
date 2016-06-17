@@ -4,10 +4,6 @@
 
 module Helpers
   module Params
-    def self.volume_sessions
-      @@sessions ||= {}
-    end
-
     def parse_params(params)
       return unless params[:Name] && params[:Name].include?('=')
       params[:Opts] ||= {}
@@ -33,24 +29,6 @@ module Helpers
 
     def params_name
       return params[:Name]
-    end
-
-    def session_token_valid?(otp)
-      return unless Params.volume_sessions[vol_name]
-      return unless Params.volume_sessions[vol_name][:otp] == otp
-      true
-    end
-
-    def get_session_token(otp)
-      return unless session_token_valid?(otp)
-      Params.volume_sessions[vol_name][:token]
-    end
-
-    def set_session_token(otp, token)
-      Params.volume_sessions[vol_name] = {
-        otp: otp,
-        token: token,
-      }
     end
   end
 end
