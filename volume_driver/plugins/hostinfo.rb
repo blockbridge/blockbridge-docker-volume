@@ -43,7 +43,7 @@ module Blockbridge
           hostinfo: {
             :_schema => "terminal",
             :data    => {
-              title: 'Docker Overview',
+              title: 'Docker Volume Sense',
               ongoing: false,
               css: {
                 'min-height' => '25px',
