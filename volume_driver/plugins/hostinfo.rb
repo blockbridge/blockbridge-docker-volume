@@ -28,7 +28,7 @@ module Blockbridge
     end
 
     def volume_host_info_lookup(vol, vol_info)
-      xmd = bbapi(vol[:user], vol_info[:scope_token]).xmd.info(vol_host_ref(vol[:name])) rescue nil
+      xmd = bbapi(vol[:user], vol_info[:scope_token]).xmd.info(vol_hostinfo_ref(vol[:name])) rescue nil
       return volume_host_info_map(xmd) unless xmd.nil?
     end
 
@@ -37,7 +37,7 @@ module Blockbridge
       return vol_host_info if vol_host_info
 
       params = {
-        ref: vol_host_ref(vol[:name]),
+        ref: vol_hostinfo_ref(vol[:name]),
         xref: volume_ref_name(vol[:name]),
         data: {
           hostinfo: {
@@ -240,7 +240,7 @@ module Blockbridge
                 { op: 'add', path: '/hostinfo/data/css',
                   value: { 'min-height' => "#{volume_host_info_display_height(hostinfo)}" } } ]
       }
-      bbapi(vol[:user], vol_info[:scope_token]).xmd.update(vol_host_ref(vol[:name]), params)
+      bbapi(vol[:user], vol_info[:scope_token]).xmd.update(vol_hostinfo_ref(vol[:name]), params)
     end
 
     def volume_hostinfo
