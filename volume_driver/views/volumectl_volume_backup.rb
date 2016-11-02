@@ -2,8 +2,4 @@
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 
-module Blockbridge
-  module VolumeDriverVersion
-    VERSION = '4.0'
-  end
-end
+header "Volume backup initiated for #{opts[:cmd].volume} with backup id #{data['backup_id']}.."

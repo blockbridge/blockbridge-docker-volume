@@ -17,10 +17,7 @@ class API::Volume < Grape::API
     optional :capacity,     type: String,  desc: 'volume capacity'
     optional :iops,         type: Integer, desc: 'volume provisioning IOPS (QoS)'
     optional :attributes,   type: String,  desc: 'volume attributes'
-    optional :clone_basis,  type: String,  desc: '(autoclone) volume clone basis'
-    optional :snapshot_tag, type: String,  desc: '(autoclone) volume clone basis snapshot tag'
-    optional :snapshot_interval_hours, type: Integer, desc: '(snappy) take snapshot every interval'
-    optional :snapshot_interval_history, type: Integer, desc: '(snappy) retrain this many snapshots'
+    optional :from_backup,  type: String,  desc: 'create volume from backup'
     mutually_exclusive :profile, :type
   end
   post do
@@ -49,5 +46,23 @@ class API::Volume < Grape::API
         volume_remove
       end
     end
+
+    resource :backup do
+      desc 'Backup a volume'
+      params do
+        optional :backup_name, type: String, desc: 'backup name'
+        optional :s3, type: String, desc: 'object store name'
+      end
+      put do
+        status 201
+        synchronize do
+          body(volume_backup)
+        end
+      end
+    end
+  end
+
+  route :any, '*path' do
+    error!({ Error: 'Volume not found' }, 404)
   end
 end

@@ -26,7 +26,7 @@ module Blockbridge
     end
 
     def run
-      EM::Synchrony.run_and_add_periodic_timer(monitor_interval_s, &method(:volume_cache_monitor))
+      EM::Synchrony.run_and_add_periodic_timer(monitor_interval_s, &method(:volume_cache_monitor_run))
     end
 
     def reset
@@ -56,7 +56,7 @@ module Blockbridge
     def cache_version_lookup
       xmd = cache_status_create
       xmd[:seq]
-    rescue Excon::Errors::NotFound, Excon::Errors::Gone
+    rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound, Blockbridge::Api::NotFoundError
     end
 
     def volume_async_remove(vol, vol_info, vol_env)
@@ -68,7 +68,7 @@ module Blockbridge
       end
       vol_cache_rm(vol[:name])
       logger.info "#{vol[:name]} async removed"
-    rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound
+    rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound, Blockbridge::Api::NotFoundError
       logger.debug "#{vol[:name]} async remove: volume not found"
     rescue Blockbridge::VolumeInuse
       logger.debug "#{vol[:name]} async remove: not removing; volume still in use"
@@ -95,6 +95,8 @@ module Blockbridge
 
     def volume_cache_monitor_run
       volume_cache_monitor
+    rescue Excon::Error => e
+      logger.error "cache monitor request failed: #{e.message.chomp.squeeze("\n")}"
     rescue => e
       msg = e.message.chomp.squeeze("\n")
       msg.each_line do |m| logger.error "cache monitor: #{m.chomp}" end

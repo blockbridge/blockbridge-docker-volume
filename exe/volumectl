@@ -3,6 +3,10 @@
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 
+dev_lib = File.join(File.dirname(__FILE__), '..')
+$LOAD_PATH.unshift(dev_lib)
+$LOAD_PATH.unshift('/usr/src/app')
+
 require 'bundler/setup'
 require 'clamp'
 require 'multi_json'
@@ -11,21 +15,15 @@ require 'restclient/components'
 require 'uri'
 require 'excon'
 require 'pp'
-
-module Helpers
-  def machine?
-    !!(ENV['BLOCKBRIDGE_MACHINE_FORMAT'].to_i != 0 || ARGV.index('--machine'))
-  end
-
-  def debug?
-    !!(ENV['BLOCKBRIDGE_DEBUG'].to_i != 0 || ARGV.index('--debug'))
-  end
-
-  extend self
-end
+require 'volume_driver/cli'
 
 class Command < Clamp::Command
-  include Helpers
+  include Blockbridge::Results
+
+  def self.use(cls, opts = {})
+    include cls
+    instance_eval(&cls.send(:setup, opts))
+  end
 
   def execute
     # wrap Clamp's 'execute' method to ensure any raised exceptions include
@@ -37,7 +35,7 @@ class Command < Clamp::Command
     this_command_instance = self
 
     begin
-      self.exec
+      format_results self.exec
     rescue StandardError, Interrupt => e
       # add a command_instance attribute to whatever excetion was thrown,
       # and set it to the previously saved value of 'self'
@@ -53,21 +51,42 @@ class Command < Clamp::Command
   end
 
   # global options
-  option('--machine', :flag, 'format output for machines')
-  option('--debug', :flag, 'enable additional debug')
-  option('--api-proto', 'PROTO', 'specify endpoint protocol', default: 'http')
-  option('--api-host', 'HOST', 'specify endpoint host', default: 'localhost')
-  option('--api-port', 'PORT', 'specify endpoint port', default: 27001)
-  option('--api-url', 'URL', 'specify endpoint url', attribute_name: :base_url)
-  option('--api-token', '', 'specify bearer token',
-         attribute_name: :bearer_auth)
-  option('-u', 'USER:PASS', 'specify username & password basic auth',
-         attribute_name: :basic_auth)
-  option('-k', :flag, 'ignore tls certificate errors',
-         attribute_name: :ignore_tls_errors)
+  option_group 'Global' do
+    option('--verbose', :flag, 'enable verbose output')
+    option('--debug', :flag, 'enable additional debug')
+    option(['--raw', '-R'], :flag, 'enable raw output')
+    option('--yaml', :flag, 'print yaml for raw output')
+
+    option_group nil, :hidden => true do
+      option('--machine', :flag, 'format output for machines')
+      option('--api-proto', 'PROTO', 'specify endpoint protocol', default: 'http')
+      option('--api-host', 'HOST', 'specify endpoint host', default: 'localhost')
+      option('--api-port', 'PORT', 'specify endpoint port', default: 27001)
+      option('--api-url', 'URL', 'specify endpoint url', attribute_name: :base_url)
+      option('--api-token', '', 'specify bearer token',
+             attribute_name: :bearer_auth)
+      option('-u', 'USER:PASS', 'specify username & password basic auth',
+             attribute_name: :basic_auth)
+      option('-k', :flag, 'ignore tls certificate errors',
+             attribute_name: :ignore_tls_errors)
+    end
+  end
+
 
   def default_base_url
     "#{api_proto}://#{api_host}:#{api_port}"
+  end
+
+  def machine?
+    !!(ARGV.index('--machine'))
+  end
+
+  def debug?
+    !!(ENV['BLOCKBRIDGE_DEBUG'].to_i != 0 || ARGV.index('--debug'))
+  end
+
+  def verbose?
+    !!(ENV['BLOCKBRIDGE_VERBOSE'].to_i != 0 || ARGV.index('--verbose'))
   end
 
   # client class
@@ -90,25 +109,36 @@ class Command < Clamp::Command
       client.request(req)
     end
 
-    def info(params)
-      req = request(:get, params[:name], params)
+    def list(params = {})
+      req = request(:get, nil, nil, params)
       client.request(req).body
     end
 
-    def list
-      req = request(:get, nil, nil)
+    def backup(params)
+      req = request(:put, "#{params[:name]}/backup", params)
+      client.request(req).body
+    end
+
+    def inspect(params)
+      req = request(:get, params[:name], nil, params)
+      client.request(req).body
+    end
+
+    def info(params)
+      req = request(:get, 'info', nil, params)
       client.request(req).body
     end
 
     private
 
-    def request(method, path, body)
+    def request(method, path, body, query = nil)
       Hash.new.tap do |h|
         h[:method] = method
         h[:path] = "/#{@prefix}"
         h[:path] += "/#{path}" if path
         h[:body] = MultiJson.dump(body) if body
-        h[:expects] = (200..204).to_a << 304 << 400 << 404
+        h[:query] = query if query
+        h[:expects] = (200..204).to_a << 304
       end
     end
   end
@@ -123,9 +153,8 @@ class Command < Clamp::Command
     @profile_class ||= Client.new("profile")
   end
 
-  # client run
-  def execute
-    format_results exec
+  def backup_api
+    @backup_class ||= Client.new("backup")
   end
 
   def enum_check(val, options, fmt = nil)
@@ -136,10 +165,26 @@ class Command < Clamp::Command
     val
   end
 
-  def format_results(data)
+  def uri_name(str)
+    URI::escape(str, Regexp.union(URI::UNSAFE, /[\/.]/))
+  end
+
+  def display(*args)
+    puts(*args)
+  end
+
+  def format_results(data, opts = {})
     return if data.nil? || data.empty?
     data = MultiJson.load(data) if data.is_a?(String)
-    puts MultiJson.dump(data, pretty: true)
+    if machine?
+      puts MultiJson.dump(data, pretty: true)
+    else
+      opts[:verbose] ||= verbose?
+      opts[:debug]   ||= debug?
+      opts[:cmd]       = self
+      output = render(data, opts)
+      display(output) unless output.nil? || output.empty?
+    end
   end
 end
 
@@ -154,10 +199,7 @@ class CreateCommand < Command
   option '--transport', 'TRANSPORT', 'requested transport (tls, insecure, etc.)' do |val|
     enum_check(val, %w(tls insecure))
   end
-  option '--clone-basis', 'CLONE-BASIS', '(autoclone) clone basis disk'
-  option '--snapshot-tag', 'SNAPSHOT-TAG', '(autoclone) clone basis disk snapshot tag'
-  option '--snapshot-interval-hours', 'SNAPSHOT-INTERVAL-HOURS', '(snappy) take snapshot every interval'
-  option '--snapshot-interval-history', 'SNAPSHOT-INTERVAL-HISTORY', '(snappy) snapshot retain count'
+  option '--from-backup', 'BACKUP', 'create disk from backup'
 
   def default_type
     'autovol' if user
@@ -165,7 +207,7 @@ class CreateCommand < Command
 
   def create_params
     Hash.new.tap { |h|
-      h[:name]         = name 
+      h[:name]         = uri_name(name)
       h[:type]         = type
       h[:user]         = user
       h[:access_token] = access_token
@@ -173,10 +215,7 @@ class CreateCommand < Command
       h[:iops]         = iops
       h[:transport]    = transport
       h[:attributes]   = attributes.join(' ') if attributes.length > 0
-      h[:clone_basis]  = clone_basis
-      h[:snapshot_tag] = snapshot_tag
-      h[:snapshot_interval_hours] = snapshot_interval_hours
-      h[:snapshot_interval_history] = snapshot_interval_history
+      h[:from_backup]  = from_backup
     }.reject { |_, v| v.nil? }
   end
 
@@ -200,12 +239,12 @@ class VolumeCreate < CreateCommand
 end
 
 class VolumeRemove < Command
-  option '--name', 'VOLUME', 'volume name', :required => true
   option '--otp', 'OTP', 'one time password authentication'
+  parameter 'VOLUME', 'volume name'
 
   def volume_remove_params
     Hash.new.tap { |h|
-      h[:name] = name
+      h[:name] = uri_name(volume)
       h[:otp]  = otp
     }.reject { |_, v| v.nil? }
   end
@@ -215,10 +254,10 @@ class VolumeRemove < Command
   end
 end
 
-class VolumeInfo < Command
-  option '--name', 'VOLUME', 'volume name'
+class VolumeInspect < Command
+  parameter 'VOLUME', 'volume name'
   def exec
-    volume_api.info(name: name)
+    volume_api.inspect(name: uri_name(volume))
   end
 end
 
@@ -228,11 +267,21 @@ class VolumeList < Command
   end
 end
 
+class VolumeBackup < Command
+  parameter 'VOLUME',        'volume name'
+  parameter '[BACKUP-NAME]', '[s3/backup-name] specify optional S3 object store and backup name to use'
+  option '--s3', 'S3',       'specify S3 object store'
+  def exec
+    volume_api.backup(name: uri_name(volume), backup_name: backup_name, s3: s3)
+  end
+end
+
 class VolumeCommand < Command
   subcommand 'create', 'create a volume', VolumeCreate
   subcommand ['remove', 'rm'], 'remove a volume', VolumeRemove
-  subcommand 'info', 'show info about a volume', VolumeInfo
+  subcommand 'inspect', 'inspect a volume', VolumeInspect
   subcommand ['list', 'ls'], 'show all volumes', VolumeList
+  subcommand 'backup', 'backup a volume', VolumeBackup
 end
 
 class ProfileCreate < CreateCommand
@@ -245,22 +294,16 @@ class ProfileCreate < CreateCommand
 end
 
 class ProfileRemove < Command
-  option '--name', 'PROFILE', 'profile name', :required => true
-
+  parameter 'PROFILE', 'profile name'
   def exec
     profile_api.delete(name: name).body
   end
 end
 
-class ProfileUpdate < Command
+class ProfileInspect < Command
+  parameter 'PROFILE', 'profile name'
   def exec
-  end
-end
-
-class ProfileInfo < Command
-  option '--name', 'PROFILE', 'profile name'
-  def exec
-    profile_api.info(name: name)
+    profile_api.inspect(name: profile)
   end
 end
 
@@ -272,23 +315,56 @@ end
 
 class ProfileCommand < Command
   subcommand 'create', 'create a profile', ProfileCreate
-  subcommand 'update', 'update a profile', ProfileUpdate
   subcommand ['remove', 'rm'], 'remove a profile', ProfileRemove
-  subcommand 'info', 'show info about a profile', ProfileInfo
+  subcommand 'inspect', 'inspect a profile', ProfileInspect
   subcommand ['list', 'ls'], 'list all profiles', ProfileList
+end
+
+class BackupList < Command
+  option '--profile', 'PROFILE', 'list backups for profile'
+  def exec
+    backup_api.list(profile: profile)
+  end
+end
+
+class BackupInspect < Command
+  option '--profile', 'PROFILE', 'profile to inspect backup for'
+  parameter 'BACKUP', 'backup to inspect'
+
+  def exec
+    backup_api.inspect(name: backup)
+  end
+end
+
+class BackupRemove < Command
+  option '--profile', 'PROFILE', 'profile to remove backup for'
+  parameter 'BACKUP', 'backup to remove'
+
+  def exec
+    backup_api.delete(name: backup).body
+  end
+end
+
+class BackupInfo < Command
+  option '--profile', 'PROFILE', 'show backup info for profile'
+  def exec
+    backup_api.info(profile: profile)
+  end
+end
+
+class BackupCommand < Command
+  subcommand ['list', 'ls'], 'list backups', BackupList
+  subcommand 'inspect', 'inspect backup', BackupInspect
+  subcommand ['remove', 'rm'], 'remove backup', BackupRemove
+  subcommand 'info', 'list S3 object store info', BackupInfo
 end
 
 class VolumeControl < Command
   subcommand 'volume', 'manage volumes', VolumeCommand
   subcommand 'profile', 'manage volume profiles', ProfileCommand
+  subcommand 'backup', 'manage volume backups', BackupCommand
 end
 
-begin
-  VolumeControl.run
-rescue StandardError, Interrupt => e
-  if Helpers.debug?
-    STDERR.puts e.inspect, e.class, e.backtrace
-  end
-  abort(Helpers.machine? ? "#{e.class} #{e.message}" :
-          "Operation failed: #{e.message}")
+if __FILE__ == $0
+  CliMain.new(VolumeControl, ARGV.dup).execute!
 end

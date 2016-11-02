@@ -20,6 +20,7 @@ class VolumeDriver
     use Goliath::Rack::Render # auto-negotiate response format
     use Goliath::Rack::Params # parse & merge query and body parameters
 
+    plugin Blockbridge::Startup
     plugin Blockbridge::Config
     plugin Blockbridge::VolumeCacheMonitor
     plugin Blockbridge::VolumeHostinfo
@@ -36,9 +37,13 @@ class VolumeDriver
       if (query_string = env['QUERY_STRING']) && !query_string.empty?
         full_uri += "?" + query_string
       end
-    
-      "#{env['HTTP_X_FORWARDED_FOR'] || env['REMOTE_ADDR'] || '-'} " \
-      "#{env['REMOTE_USER'] || '-'} " \
+
+      str = '- '
+      if env['api.request.body']
+        name = env['api.request.body']['Name'].to_s
+        str = name.empty? ? '- ' : "#{name} "
+      end
+      str.concat "#{env['REMOTE_USER'] || '-'} " \
       "\"#{env['REQUEST_METHOD']} #{full_uri} #{env['HTTP_VERSION']}\" " \
       "#{response.status} " \
       "#{response.headers['Content-Length'] || '-'} " \

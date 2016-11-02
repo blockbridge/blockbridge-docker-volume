@@ -108,6 +108,7 @@ docker run --name blockbridge-volume-driver                                     
            --volume /proc/1/ns:/ns-mnt                                                  \
            --volume /lib/modules:/lib/modules                                           \
            --volume /etc/iscsi:/etc/iscsi                                               \
+           --volume blockbridge-iscsi:/var/lib/iscsi                                    \
            --volume blockbridge-volumes:/bb/volumes                                     \
            --volume /bb/env:/bb/env                                                     \
            --volume /var/run/docker/plugins/blockbridge:/run/docker/plugins/blockbridge \

@@ -221,7 +221,7 @@ module Blockbridge
         return unless disk_attach_host(attach_xmd) == ENV['HOSTNAME']
       else
         # detached
-        return unless (vol_host_info.data.host.nil? ||
+        return unless (vol_host_info&.data&.host.nil? ||
                        (vol_host_info.data.host == ENV['HOSTNAME']))
       end
 
@@ -252,6 +252,8 @@ module Blockbridge
 
     def volume_hostinfo_run
       volume_hostinfo
+    rescue Excon::Error => e
+      logger.error "hostinfo request failed: #{e.message.chomp.squeeze("\n")}"
     rescue => e
       msg = e.message.chomp.squeeze("\n")
       msg.each_line do |m| logger.error "hostinfo: #{m.chomp}" end

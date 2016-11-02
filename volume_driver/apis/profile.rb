@@ -15,10 +15,8 @@ class API::Profile < Grape::API
     optional :capacity,     type: String,  desc: 'volume capacity'
     optional :iops,         type: Integer, desc: 'volume provisioning IOPS (QoS)'
     optional :attributes,   type: String,  desc: 'volume attributes'
-    optional :clone_basis,  type: String,  desc: '(autoclone) volume clone basis'
-    optional :snapshot_tag, type: String,  desc: '(autoclone) volume clone basis snapshot tag'
-    optional :snapshot_interval_hours, type: Integer, desc: '(snappy) take snapshot every interval'
-    optional :snapshot_interval_history, type: Integer, desc: '(snappy) retrain this many snapshots'
+    optional :s3,           type: String,  desc: 'S3 object store'
+    optional :backup,       type: String,  desc: 'object backup'
   end
   post do
     status 201

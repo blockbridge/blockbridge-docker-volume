@@ -22,4 +22,6 @@ module Blockbridge
   class CommandError < Error; end
   class ResourcesUnavailable < Error; end
   class VolumeInuse < Error; end
+  class RuntimeError < Error; end
+  class RuntimeSuccess < Error; end
 end

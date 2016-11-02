@@ -4,6 +4,22 @@
 
 module Helpers
   module Cmd
+    def fsfreeze
+      '/sbin/fsfreeze'
+    end
+
+    def ns_exec
+      '/bb/bin/nsexec'
+    end
+
+    def ns_exec_mnt
+      "#{ns_exec} /ns-mnt/mnt"
+    end
+
+    def ns_exec_net
+      "#{ns_exec} /ns-net/net"
+    end
+
     def cmd_exec_multi(cmds)
       multi = EventMachine::Synchrony::Multi.new
       cmds.each_with_index do |cmd, idx|

@@ -33,10 +33,7 @@ class API::DockerPlugin < Grape::API
         optional :capacity,     type: String,  desc: 'volume provisioning capacity'
         optional :iops,         type: Integer, desc: 'volume provisioning IOPS (QoS)'
         optional :attributes,   type: String,  desc: 'volume provisioning attributes'
-        optional :clone_basis,  type: String,  desc: '(autoclone) volume clone basis'
-        optional :snapshot_tag, type: String,  desc: '(autoclone) volume clone basis snapshot tag'
-        optional :snapshot_interval_hours, type: Integer, desc: '(snappy) take snapshot every interval'
-        optional :snapshot_interval_history, type: Integer, desc: '(snappy) snapshot retain count'
+        optional :from_backup,  type: String,  desc: 'create volume from backup'
         mutually_exclusive :profile, :type
       end
     end
@@ -70,6 +67,7 @@ class API::DockerPlugin < Grape::API
     desc "Mount a Volume"
     params do
       requires :Name, type: String, desc: "Volume Name"
+      optional :ID, type: String, desc: "Volume mount ID"
       optional :Opts, type: Hash, desc: 'Volume Options' do
         optional :otp, type: String,  desc: 'volume one time password (OTP)'
       end
@@ -98,6 +96,7 @@ class API::DockerPlugin < Grape::API
     desc "Unmount a Volume"
     params do
       requires :Name, type: String, desc: "Volume Name"
+      optional :ID, type: String, desc: "Volume mount ID"
     end
     post do
       synchronize do
@@ -123,6 +122,13 @@ class API::DockerPlugin < Grape::API
     desc "List existing volumes"
     post do
       body(Volumes: volume_list, Err: nil)
+    end
+  end
+
+  resource 'VolumeDriver.Capabilities' do
+    desc "Get driver capabilities"
+    post do
+      body(Capabilities: { "Scope" => "global" })
     end
   end
 end
