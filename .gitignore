@@ -1,3 +1,4 @@
 *.sw*
 .bundle
 vendor
+plugin

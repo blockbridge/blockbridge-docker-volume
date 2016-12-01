@@ -1,0 +1,75 @@
+{
+  "description": "Blockbridge Volume Plugin",
+  "documentation": "https://github.com/blockbridge/blockbridge-docker-volume",
+  "workdir": "/usr/src/app",
+  "entrypoint": ["./volume_driver.sh"],
+  "interface": {
+    "types": ["docker.volumedriver/1.0"],
+    "socket": "blockbridge/blockbridge.sock"
+  },
+  "network": {
+    "type": "host"
+  },
+  "args": null,
+  "linux": {
+    "capabilities": ["CAP_NET_ADMIN", "CAP_SYS_ADMIN", "CAP_MKNOD"],
+    "devices": null
+  },
+  "mounts": [
+    {
+      "name": "volume data",
+      "description": "volume driver state",
+      "source": "/bb/volumes",
+      "destination": "/bb/volumes",
+      "type": "bind",
+      "options": ["shared", "rbind"]
+    },
+    {
+      "name": "sockets directory for docker.sock",
+      "description": "run directory for sockets for API access",
+      "source": "/var/run",
+      "destination": "/run",
+      "type": "bind",
+      "options": ["shared", "rbind"]
+    },
+    {
+      "name": "iscsi",
+      "description": "iscsi initiator configuration",
+      "source": "/etc/iscsi",
+      "destination": "/etc/iscsi",
+      "type": "bind",
+      "options": ["shared", "rbind"]
+    },
+    {
+      "name": "kernel modules",
+      "description": "kernel modules",
+      "source": "/lib/modules",
+      "destination": "/lib/modules",
+      "type": "bind",
+      "options": ["shared", "rbind"]
+    }
+  ],
+  "env": [
+    {
+      "name": "BLOCKBRIDGE_ERROR_FORMAT",
+      "description": "blockbridge cli error format",
+      "value": "machine"
+    },
+    {
+      "name": "BLOCKBRIDGE_API_HOST",
+      "description": "blockbridge api host (management node)",
+      "value": "unset",
+      "Settable": [
+        "value"
+      ]
+    },
+    {
+      "name": "BLOCKBRIDGE_API_KEY",
+      "description": "blockbridge api key",
+      "value": "unset",
+      "Settable": [
+        "value"
+      ]
+    }
+  ]
+}

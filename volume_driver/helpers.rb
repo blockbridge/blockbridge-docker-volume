@@ -18,6 +18,7 @@ module Helpers
   include Helpers::Params
   include Helpers::Volume
   include Helpers::Profile
+  include Helpers::Backup
   include Helpers::DockerApi
   include Helpers::BlockbridgeApi
   include Helpers::Iscsid

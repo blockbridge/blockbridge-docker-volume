@@ -14,7 +14,7 @@ module Helpers
             "BLOCKBRIDGE_VOLUME_REF"     => volume_ref_name,
             "BLOCKBRIDGE_CACHE_REF"      => vol_cache_ref,
             "BLOCKBRIDGE_HOSTINFO_REF"   => vol_hostinfo_ref,
-            "BLOCKBRIDGE_VOLUME_PARAMS"  => MultiJson.dump(volume_params),
+            "BLOCKBRIDGE_VOLUME_PARAMS"  => volume_params_json,
             "BLOCKBRIDGE_VOLUME_TYPE"    => volume_type,
             "BLOCKBRIDGE_VOLUME_PATH"    => vol_path,
             "BLOCKBRIDGE_MOUNT_PATH"     => mnt_path,
@@ -37,8 +37,12 @@ module Helpers
       @volume_env.reject { |k, v| v.nil? }
     end
 
-    def volume_cmd_exec(cmd)
-      cmd_exec(cmd, volume_env)
+    def volume_params_json
+      MultiJson.dump(volume_params)
+    end
+
+    def volume_cmd_exec(cmd, **params)
+      cmd_exec(cmd, volume_env.merge(**params))
     end
 
     def vol_hostinfo_ref(name = nil)
@@ -58,10 +62,7 @@ module Helpers
         :capacity,
         :attributes,
         :iops,
-        :clone_basis,
-        :snapshot_tag,
-        :snapshot_interval_hours,
-        :snapshot_interval_history
+        :from_backup,
       ]
     end
 
@@ -78,6 +79,7 @@ module Helpers
     end
 
     def volume_user
+      return unless defined? params
       @volume_user ||=
         begin
           raise Blockbridge::NotFound, "No volume user found; specify user or volume profile" if volume_params[:user].nil?
@@ -87,6 +89,7 @@ module Helpers
     end
 
     def volume_type
+      return unless defined? params
       @volume_type ||=
         begin
           raise Blockbridge::NotFound, "No volume type found; specify volume type or volume profile" if volume_params[:type].nil?
@@ -95,12 +98,12 @@ module Helpers
     end
 
     def volume_profile
+      return unless defined? params
       @volume_profile ||=
         begin
           name = params_profile || 'default'
           profile = profile_info(name).first
           raise "no profile found" if profile.nil?
-          logger.info "#{vol_name} using volume profile for #{name}: #{profile}"
           profile
         end
     rescue => e
@@ -108,7 +111,7 @@ module Helpers
       raise Blockbridge::NotFound, "Volume profile not found: #{params_profile}: #{e.message}"
     end
 
-    def volume_params_find
+    def volume_params_opts
       opts = params_opts
       if opts && params_type
         h = Hash.new.tap do |h|
@@ -117,35 +120,37 @@ module Helpers
           end
           h[:type] = params_type
         end
-        logger.info "#{vol_name} using volume info from options: #{h}"
         h
-      elsif volume_def
-        logger.info "#{vol_name} using volume info from existing volume #{vol_name}: #{volume_def}"
-        volume_def
-      elsif env_file
-        logger.info "#{vol_name} using volume info from environment file #{env_file}: #{env_file_params}"
-        env_file_params
-      elsif volume_profile
+      end
+    end
+
+    def volume_params_find
+      if volume_profile
         profile = volume_profile.reject { |k, v| k == :name }
-        opts.each { |key,val| profile[key] = val if vol_param_keys.include? key } if opts
         logger.info "#{vol_name} using volume info from profile #{volume_profile[:name]}: #{profile}"
         profile
-      elsif env_file_default
-        env_file_default_params
-        opts.each { |key,val| env_file_default_params[key] = val if vol_param_keys.include? key } if opts
-        logger.info "#{vol_name} using volume info from environment file #{env_file_default}: #{env_file_default_params}"
-        env_file_default_params
       else
         {}
       end
     end
 
+    def volume_params_augment(p)
+      p[:name]   = vol_name
+      p[:s3]     = params_obj_store if params_obj_store
+      p[:backup] = params_backup if params_backup
+      p.delete(:backup_name)
+      p.delete(:from_backup)
+    end
+
     def volume_params
+      return unless defined? params
       return if vol_cache_enabled?(vol_name)
       @volume_params ||=
         begin
-          p = volume_params_find
-          p[:name] = vol_name if p
+          p = volume_def || volume_params_find
+          p.merge! volume_params_opts if volume_params_opts
+          volume_params_augment p
+          logger.info "#{vol_name} using volume options: #{p}" unless volume_def
           p
         end
     end
@@ -157,6 +162,7 @@ module Helpers
     end
 
     def volume_def
+      return if vol_name.nil?
       @volume_def ||= volume_info.first
     end
 
@@ -239,14 +245,15 @@ module Helpers
       end
     end
 
+    def volume_exists?
+      bbapi.vdisk.list(label: vol_name).first
+    end
+
     def volume_create
       volume_check_params
+      return if volume_exists?
       logger.info "#{vol_name} creating..."
-      if volume_type == "autoclone"
-        volume_clone
-      else
-        volume_provision
-      end
+      bb_vss_provision
       logger.info "#{vol_name} created"
     rescue
       volume_cmd_exec("bb_remove") rescue nil
@@ -279,6 +286,7 @@ module Helpers
     end
 
     def volume_access_token
+      return unless defined? params
       # if otp specified, use session token. Either auth login to create one or use valid one.
       # - if can't SU, then it will fail. RETURN good error here saying can't SU
       #
@@ -349,6 +357,26 @@ module Helpers
       end
     end
 
+    def volume_freeze(vol)
+      return unless mount_needed?
+      cmd = "#{ns_exec_mnt} #{fsfreeze} --freeze #{mnt_path(vol[:name])}"
+      volume_cmd_exec(cmd)
+    end
+
+    def volume_unfreeze(vol)
+      return unless vol && mount_needed?
+      cmd = "#{ns_exec_mnt} #{fsfreeze} --unfreeze #{mnt_path(vol[:name])}"
+      volume_cmd_exec(cmd)
+    end
+
+    def volume_backup
+      vol = volume_lookup_one(true)
+      volume_freeze(vol)
+      bb_backup_vol(vol)
+    ensure
+      volume_unfreeze(vol)
+    end
+
     def volume_provision
       logger.info "#{vol_name} provisioning if needed..."
       volume_cmd_exec("bb_provision")
@@ -372,6 +400,14 @@ module Helpers
       ensure
         volume_cmd_exec("bb_detach")
       end
+    rescue => e
+      volume_unmount
+      case e.message
+      when /Disk not found/
+        raise Blockbridge::NotFound, "Volume not found"
+      else
+        raise
+      end
     end
 
     def volume_mount
@@ -381,6 +417,14 @@ module Helpers
       volume_cmd_exec("bb_mkfs")
       volume_cmd_exec("bb_mount")
       logger.info "#{vol_name} mounted"
+    rescue => e
+      volume_unmount
+      case e.message
+      when /Disk not found/
+        raise Blockbridge::NotFound, "Volume not found"
+      else
+        raise
+      end
     end
 
     def volume_unmount
@@ -388,8 +432,30 @@ module Helpers
       return if mount_needed?
       logger.info "#{vol_name} unmounting..."
       volume_cmd_exec("bb_unmount")
+      while true
+        begin
+          volume_cmd_exec("bb_detach", BLOCKBRIDGE_DETACH_FAIL: "1")
+          break
+        rescue => e
+          case e.message
+          when /Could not logout of all requested sessions/
+            logger.debug "#{vol_name} detach retrying: could not log out of session"
+            EM::Synchrony.sleep 1
+          else
+            logger.debug "#{vol_name} detach failed: #{e.message}"
+            break
+          end
+        end
+      end
       volume_cmd_exec("bb_detach")
       logger.info "#{vol_name} unmounted"
+    rescue => e
+      case e.message
+      when /Disk not found/
+        raise Blockbridge::NotFound, "Volume not found"
+      else
+        raise
+      end
     end
   end
 end

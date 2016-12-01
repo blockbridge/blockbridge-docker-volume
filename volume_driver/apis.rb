@@ -102,35 +102,43 @@ class API::VolumeDriver < Grape::API
 
   rescue_from Grape::Exceptions::ValidationErrors do |e|
     env.logger.info e.message.chomp.squeeze("\n")
-    error!({ Err: e.message, validation_failures: e }, 400)
+    error!({ Error: e.message, validation_failures: e }, 400)
   end
 
   rescue_from Blockbridge::NotFound do |e|
-    env.logger.info e.message.chomp.squeeze("\n")
-    error!({ Err: e.message }, 400)
+    error!({ Error: e.message }, 400)
+  end
+
+  rescue_from Blockbridge::Conflict do |e|
+    error!({ Error: e.message }, 400)
   end
 
   rescue_from Blockbridge::CommandError do |e|
     msg = e.message.chomp.squeeze("\n")
     msg.each_line do |m| env.logger.error(m.chomp) end
     e.backtrace.each do |b| env.logger.error(b) end
-    error!({ Err: e.message }, 400)
+    error!({ Error: e.message }, 400)
   end
 
   rescue_from Blockbridge::ResourcesUnavailable do |e|
     env.logger.info e.message.chomp.squeeze("\n")
-    error!({ Err: e.message }, 400)
+    error!({ Error: e.message }, 400)
+  end
+
+  rescue_from Excon do |e|
+    env.logger.info e.message.chomp.squeeze("\n")
+    error!({ Error: e.message }, 400)
   end
 
   rescue_from Blockbridge::VolumeInuse do |e|
-    error!({ Err: e.message }, 400)
+    error!({ Error: e.message }, 400)
   end
 
   rescue_from :all do |e|
     msg = e.message.chomp.squeeze("\n")
     msg.each_line do |m| env.logger.error(m.chomp) end
     e.backtrace.each do |b| env.logger.error(b) end
-    error!(Err: msg)
+    error!(Error: msg)
   end
 
   before do
@@ -142,6 +150,7 @@ class API::VolumeDriver < Grape::API
 
   mount API::Volume
   mount API::Profile
+  mount API::Backup
   mount API::DockerPlugin
 
   route :any, '*path' do

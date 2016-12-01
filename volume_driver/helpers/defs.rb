@@ -20,6 +20,10 @@ module Helpers
       @profile_name ||= params[:profile] || params[:name]
     end
 
+    def mount_ref_id
+      @mount_ref_id ||= params[:ID]
+    end
+
     def env_name
       @env_name ||= vol_name
     end
@@ -80,7 +84,8 @@ module Helpers
       File.join(blockbridge_root, 'mnt', name)
     end
 
-    def vol_path(name = vol_name)
+    def vol_path(name = nil)
+      name = vol_name if name.nil?
       return "" if name.nil?
       File.join(volumes_root, name)
     end
@@ -133,6 +138,45 @@ module Helpers
       # set default type. But not if profile. And only if other params set
       return if params_profile
       return 'autovol' unless ((vol_param_keys - params_opts.keys) == vol_param_keys)
+    end
+
+    def params_parse_s3(str)
+      return unless str
+      if str.include? '/'
+        str.split('/').first
+      end
+    end
+
+    def params_backup_fields
+      [
+        :backup_name,
+        :from_backup,
+        :backup,
+      ]
+    end
+
+    def params_obj_store
+      return params_opts[:s3] if params_opts[:s3]
+      s3 = nil
+      params_backup_fields.each do |fld|
+        s3 = params_parse_s3 params_opts[fld]
+        break if s3
+      end
+      s3
+    end
+
+    def params_parse_backup(str)
+      return unless str
+      str.gsub(/^.*?\//, '')
+    end
+
+    def params_backup
+      backup = nil
+      params_backup_fields.each do |fld|
+        backup = params_parse_backup params_opts[fld]
+        break if backup
+      end
+      backup
     end
   end
 end

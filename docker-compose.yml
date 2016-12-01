@@ -6,6 +6,7 @@ services:
     volumes:
       - /run/docker/plugins/blockbridge:/run/docker/plugins/blockbridge
       - blockbridge-volumes:/bb/volumes
+      - blockbridge-iscsi:/var/lib/iscsi
       - /var/run/docker.sock:/run/docker.sock
       - /etc/iscsi:/etc/iscsi
       - /lib/modules:/lib/modules

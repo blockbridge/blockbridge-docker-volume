@@ -28,8 +28,10 @@ module Helpers
       false
     end
 
-    def start_iscsid
-      return unless vol_name
+    def start_iscsid(startup: false)
+      unless startup
+        return unless vol_name
+      end
       return if Iscsid.iscsid
       return if iscsid_running? 
 
