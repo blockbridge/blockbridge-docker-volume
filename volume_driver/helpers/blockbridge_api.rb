@@ -149,6 +149,10 @@ module Helpers
     def bb_backup_vol(vol)
       vdisk = bb_lookup_vol(vol[:name], vol[:user], volume_access_token)
       s3 = bb_lookup_s3(volume_params[:s3])
+      volume_params[:backup] = "#{vol[:name]}-backup-#{Time.now.to_s.gsub(' ', '_')}" unless volume_params[:backup]
+      if bb_lookup_backup(s3, volume_params[:backup])
+        raise Blockbridge::Conflict, "Backup already exists with label #{volume_params[:backup]}"
+      end
       params = { obj_store_id: s3.id, label: volume_params[:backup], snapshot_id: nil, async: true }
       bbapi.vdisk.backup(vdisk.id, params)
     end

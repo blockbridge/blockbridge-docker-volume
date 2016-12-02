@@ -7,7 +7,7 @@ if data.length == 0
   return
 end
 
-table(sort_cols: %w(User S3 Label ID), max_width: 135) do |t|
+table(sort_cols: %w(User S3 Label ID), max_width: 250) do |t|
   t.cols('Label', 'ID', 'User', 'S3', 'Date', 'Description')
 
   data.each do |b|
