@@ -296,7 +296,7 @@ end
 class ProfileRemove < Command
   parameter 'PROFILE', 'profile name'
   def exec
-    profile_api.delete(name: name).body
+    profile_api.delete(name: profile).body
   end
 end
 

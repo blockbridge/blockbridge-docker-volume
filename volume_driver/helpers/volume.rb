@@ -107,8 +107,7 @@ module Helpers
           profile
         end
     rescue => e
-      raise Blockbridge::NotFound, "Volume profile not specified and no default profile found: #{e.message}" if params_profile.nil?
-      raise Blockbridge::NotFound, "Volume profile not found: #{params_profile}: #{e.message}"
+      raise Blockbridge::NotFound, "Volume profile not found: #{params_profile}: #{e.message}" if params_profile
     end
 
     def volume_params_opts
@@ -158,7 +157,7 @@ module Helpers
     def volume_check_params
       return if vol_name.nil? && params_profile.nil?
       raise Blockbridge::NotFound, "No volume profile found matching #{params_profile}" if params_profile && volume_profile.nil?
-      raise Blockbridge::NotFound, "No volume parameters specified and unable to find profile or env file" if volume_params.nil?
+      raise Blockbridge::NotFound, "No volume parameters specified and no default profile found" if volume_params.nil?
     end
 
     def volume_def
