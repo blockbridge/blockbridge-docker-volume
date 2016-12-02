@@ -332,7 +332,7 @@ class BackupInspect < Command
   parameter 'BACKUP', 'backup to inspect'
 
   def exec
-    backup_api.inspect(name: backup)
+    backup_api.inspect(name: backup, profile: profile)
   end
 end
 
@@ -341,7 +341,7 @@ class BackupRemove < Command
   parameter 'BACKUP', 'backup to remove'
 
   def exec
-    backup_api.delete(name: backup).body
+    backup_api.delete(name: backup, profile: profile).body
   end
 end
 
