@@ -126,13 +126,13 @@ IOPS performance of the volume. It requires QoS configuration on the backend.
 
 Option name: **iops**
 
-### Transport
+#### Transport
 
 Blockbridge volumes support transport security. Specify `tls` to access your volumes over the network with TLS.
 
 Option name: **transport**
 
-## OTP
+#### OTP
 
 If the volume is configured for authentication, specify the one-time-password (OTP) in order to access the volume.
 
@@ -144,7 +144,7 @@ The volume source to restore from. On volume create, restore from the specified 
 
 Option name: **from_backup**
 
-### Attribute based provisioning
+#### Attribute based provisioning
 
 In addition to the required volume options, volume provisioning attributes can
 be specified to determine particular qualities of the storage to provision
@@ -359,7 +359,7 @@ bare-metal, on a VM, or in a container, in any cloud, on any provider. Access
 your data directly from any Linux or Windows host as a standard block device,
 or use it as a Docker volume through the volume plugin in a swarm. Manage your
 storage via Web UI, cross-platform command-line tools, or REST API. See
-[https://blockbridge.com](https://blockbridge.com) For more information and to
+[https://blockbridge.com](https://blockbridge.com) for more information and to
 download fully functional trial software, or contact us at info@blockbridge.com
 with any questions. We’d love to hear from you!
 
