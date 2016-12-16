@@ -56,7 +56,6 @@ simulator.
         - [Quick Start](#quick-start)
         - [Additional Configuration required?](#additional-configuration-required)
             - [Start the volume driver](#start-the-volume-driver)
-- [docker ps](#docker-ps)
     - [Volume Create](#volume-create)
         - [Volume Options](#volume-options)
             - [User](#user)
@@ -136,7 +135,7 @@ export BLOCKBRIDGE_API_KEY="1/4pz/TrwO0l53xY8j6VkorTZu2wJEeaaH5PktWI2AxSXynP9OvA
 Confirm the driver is running
 
 ````
-# docker ps
+docker ps
 CONTAINER ID        IMAGE                       COMMAND                CREATED              STATUS              PORTS                                      NAMES
 f9bba845cc12        blockbridge/volume-driver   "./volume-driver.sh"   About a minute ago   Up About a minute                                              blockbridge-volume-driver
 ````
