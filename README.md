@@ -62,8 +62,12 @@ simulator.
             - [User](#user)
             - [Capacity](#capacity)
             - [IOPS](#iops)
+        - [Transport](#transport)
+    - [OTP](#otp)
             - [From Backup](#from-backup)
         - [Attribute based provisioning](#attribute-based-provisioning)
+    - [Volume backup](#volume-backup)
+    - [Volume restore](#volume-restore)
     - [Create a volume in Docker (in-band)](#create-a-volume-in-docker-in-band)
         - [Docker volume create (Explicit)](#docker-volume-create-explicit)
         - [Docker volume create (Implicit)](#docker-volume-create-implicit)
@@ -85,6 +89,10 @@ simulator.
         - [List Profiles](#list-profiles)
         - [Inspect one Profile](#inspect-one-profile)
         - [Full command help](#full-command-help)
+    - [Volume Backups](#volume-backups)
+        - [List backups](#list-backups)
+        - [Inspect backup](#inspect-backup)
+        - [Remove backup](#remove-backup)
     - [Blockbridge Storage Simulator](#blockbridge-storage-simulator)
     - [What is Blockbridge?](#what-is-blockbridge)
     - [Support](#support)
@@ -164,6 +172,18 @@ IOPS performance of the volume. It requires QoS configuration on the backend.
 
 Option name: **iops**
 
+### Transport
+
+Blockbridge volumes support transport security. Specify `tls` to access your volumes over the network with TLS.
+
+Option name: **transport**
+
+## OTP
+
+If the volume is configured for authentication, specify the one-time-password (OTP) in order to access the volume.
+
+Option name: **otp**
+
 #### From Backup
 
 The volume source to restore from. On volume create, restore from the specified backup.
@@ -187,6 +207,22 @@ describe the exact storage characteristics you want to provision for your
 volume.
 
 Option name: **attributes**
+
+## Volume backup
+
+Backup a volume with the volume driver
+
+````
+docker exec blockbridge-volume-driver volume backup datavol
+````
+
+## Volume restore
+
+Restore a volume that was backed up. Use standard volume create options with a backup source specified.
+
+````
+docker volume create --driver blockbridge --name datavol-restore --opt from_backup=datavol-backup
+````
 
 ## Create a volume in Docker (in-band)
 
@@ -328,6 +364,32 @@ docker exec blockbridge-volume-driver profile --help
 ````
 
 Blockbridge volumes are accessible on any host, with no data copy required.
+
+## Volume Backups
+
+Backups are managed directly via the Blockbridge volume driver. Specify a volume profile
+to manage backups for, or with none specified the default is used.
+
+### List backups
+List backups for default profile.
+````
+docker exec blockbridge-volume-driver backup ls
+````
+
+List backups for specified profile.
+````
+docker exec blockbridge-volume-driver backup ls --profile block-profile
+````
+
+### Inspect backup
+````
+docker exec blockbridge-volume-driver backup inspect datavol-backup
+````
+
+### Remove backup
+````
+docker exec blockbridge-volume-driver backup rm datavol-backup
+````
 
 ## Blockbridge Storage Simulator
 
