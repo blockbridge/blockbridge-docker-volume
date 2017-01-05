@@ -22,6 +22,7 @@ services:
 
 volumes:
   blockbridge-volumes:
+  blockbridge-iscsi:
 
 networks:
   blockbridgesimulator_discovery:
