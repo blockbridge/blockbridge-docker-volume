@@ -208,8 +208,6 @@ module Helpers
           label:          vol_name,
           xref:           volume_ref_name,
           xmd_refs:       [ volume_ref_name ],
-          set_size_limit: false,
-          set_workload:   false,
         },
         xmd: {
           create:      true,
