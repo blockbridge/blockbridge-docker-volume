@@ -18,5 +18,4 @@ export PATH=/usr/lib/blockbridge-ruby/bin:/usr/local/sbin:/usr/local/bin:/usr/sb
 
 # run blockbridge docker volume driver
 ROOTDIR=$(dirname $0)
-mkdir -p /run/docker/plugins/blockbridge
-ruby -rbundler/setup $ROOTDIR/volume_driver.rb -e production -S /run/docker/plugins/blockbridge/blockbridge.sock
+ruby -rbundler/setup $ROOTDIR/volume_driver.rb -e production -S /run/docker/plugins/blockbridge.sock

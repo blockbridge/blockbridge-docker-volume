@@ -13,11 +13,19 @@ module Helpers
     end
 
     def ns_exec_mnt
-      "#{ns_exec} /ns-mnt/mnt"
+      if ENV['BLOCKBRIDGE_NET_LOCAL'] != "1"
+        "#{ns_exec} /ns-mnt/mnt"
+      else
+        ""
+      end
     end
 
     def ns_exec_net
-      "#{ns_exec} /ns-net/net"
+      if ENV['BLOCKBRIDGE_NET_LOCAL'] != "1"
+        "#{ns_exec} /ns-net/net"
+      else
+        ""
+      end
     end
 
     def cmd_exec_multi(cmds)

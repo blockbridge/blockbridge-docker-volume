@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (c) 2015-2016, Blockbridge Networks LLC.  All rights reserved.
+# Copyright (c) 2015-2017, Blockbridge Networks LLC.  All rights reserved.
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 
@@ -93,9 +93,27 @@ class Command < Clamp::Command
   class Client
     attr_reader :client
 
+    def socket_dirs
+      [
+        '/run/docker/plugins/*',
+      ]
+    end
+
+    def client_connect
+      socket_dirs.each do |dir|
+        Dir[dir].each do |path|
+          begin
+            @client ||= Excon.new('unix:///', :socket => File.join(path, 'blockbridge.sock'),
+                                  :headers => { 'Content-Type' => 'application/json' })
+          rescue
+          end
+        end
+        fail "Unable to connect to `blockbridge.sock`. Check that driver is running." unless @client
+      end
+    end
+
     def initialize(prefix)
-      @client ||= Excon.new('unix:///', :socket => "/var/run/docker/plugins/blockbridge/blockbridge.sock",
-                            :headers => { 'Content-Type' => 'application/json' })
+      client_connect
       @prefix = prefix
     end
 
