@@ -5,24 +5,34 @@
   "entrypoint": ["./volume_driver.sh"],
   "interface": {
     "types": ["docker.volumedriver/1.0"],
-    "socket": "blockbridge/blockbridge.sock"
+    "socket": "blockbridge.sock"
   },
   "network": {
     "type": "host"
   },
   "args": null,
   "linux": {
-    "capabilities": ["CAP_NET_ADMIN", "CAP_SYS_ADMIN", "CAP_MKNOD"],
+    "capabilities": ["CAP_IPC_LOCK", "CAP_IPC_OWNER", "CAP_NET_ADMIN", "CAP_SYS_ADMIN", "CAP_MKNOD"],
+    "allowAllDevices": true,
     "devices": null
   },
+  "PropagatedMount": "/bb/mnt",
   "mounts": [
     {
-      "name": "volume data",
-      "description": "volume driver state",
-      "source": "/bb/volumes",
-      "destination": "/bb/volumes",
+      "name": "/dev",
+      "description": "host devices",
+      "source": "/dev",
+      "destination": "/dev",
       "type": "bind",
       "options": ["shared", "rbind"]
+    },
+    {
+      "name": "/sys",
+      "description": "host /sys",
+      "source": "/sys",
+      "destination": "/sys",
+      "type": "bind",
+      "options": ["rshared", "rbind"]
     },
     {
       "name": "sockets directory for docker.sock",
@@ -30,7 +40,7 @@
       "source": "/var/run",
       "destination": "/run",
       "type": "bind",
-      "options": ["shared", "rbind"]
+      "options": ["shared", "bind"]
     },
     {
       "name": "iscsi",
@@ -54,6 +64,16 @@
       "name": "BLOCKBRIDGE_ERROR_FORMAT",
       "description": "blockbridge cli error format",
       "value": "machine"
+    },
+    {
+      "name": "BLOCKBRIDGE_MNT_LOCAL",
+      "description": "blockbridge mnt setting",
+      "value": "1"
+    },
+    {
+      "name": "BLOCKBRIDGE_NET_LOCAL",
+      "description": "blockbridge net setting",
+      "value": "1"
     },
     {
       "name": "BLOCKBRIDGE_API_HOST",
