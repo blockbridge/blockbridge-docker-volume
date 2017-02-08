@@ -127,10 +127,19 @@ module Blockbridge
       info
     end
 
+    def volume_hostname
+      @volume_hostname ||=
+        begin
+          cmd = [ 'hostname' ]
+          res = cmd_exec_raw(*cmd, {})
+          res.chomp.squeeze("\n")
+        end
+    end
+
     def volume_host_info_build_fs(vol, vol_info, attach_xmd)
       return [] unless attach_xmd
       info = []
-      cmd = ['/bb/bin/nsexec', '/ns-mnt/mnt', 'df', '-kTh', mnt_path(vol[:name])]
+      cmd = [ns_exec_mnt, 'df', '-kTh', mnt_path(vol[:name])]
       res = cmd_exec_raw(*cmd, {})
 
       res.each_line do |l|
@@ -144,7 +153,6 @@ module Blockbridge
           "Used               #{md[:used]}",
           "Available          #{md[:avail]}",
           "Used%              #{md[:use_percent]}",
-          "Mounted on         #{md[:mounted]}",
         ]
         info.push ""
         info.concat fsinfo
@@ -156,7 +164,7 @@ module Blockbridge
 
     def container_mounts_volume?(c, vol)
       c.info['Mounts'].each do |m|
-        return true if m['Source'] == mnt_path(vol[:name])
+        return true if m['Source'].end_with? mnt_path(vol[:name])
       end
       false
     end
@@ -173,7 +181,7 @@ module Blockbridge
           cinfo = [
             "Container ID       #{c.id[0..12]}",
             "Name               #{c.info['Names'].first[1..100]}",
-            "Host               #{ENV['HOSTNAME']}",
+            "Host               #{volume_hostname}",
             "Image              #{c.info['Image']}",
             "Command            #{c.info['Command']}",
             "State              #{c.info['State']}",
@@ -184,11 +192,10 @@ module Blockbridge
           info.concat cinfo
 
           c.info['Mounts'].each do |m|
-            next unless m['Source'] == mnt_path(vol[:name])
-            minfo = [
-              "Mount Propagation  #{m['Propagation']}",
-              "Mounted on         #{m['Destination']}",
-            ]
+            next unless m['Source'].end_with? mnt_path(vol[:name])
+            minfo = []
+            minfo.push "Mount Propagation  #{m['Propagation']}" unless m['Propagation'].empty?
+            minfo.push "Mounted on         #{m['Destination']}" unless m['Destination'].empty?
 
             info.concat minfo
           end
@@ -218,11 +225,11 @@ module Blockbridge
       xmd = bb_get_attached(vol[:name], vol[:user], vol_info[:scope_token])
       if xmd && (attach_xmd = xmd.first)
         # attached
-        return unless disk_attach_host(attach_xmd) == ENV['HOSTNAME']
+        return unless disk_attach_host(attach_xmd) == volume_hostname
       else
         # detached
         return unless (vol_host_info&.data&.host.nil? ||
-                       (vol_host_info.data.host == ENV['HOSTNAME']))
+                       (vol_host_info.data.host == volume_hostname))
       end
 
       # build failed ; or no update required
@@ -234,7 +241,7 @@ module Blockbridge
         data: [ { op: 'add', path: '/hostinfo/data/lines',
                   value: hostinfo },
                 { op: 'add', path: '/hostinfo/data/host',
-                  value: ENV['HOSTNAME'] },
+                  value: volume_hostname },
                 { op: 'add', path: '/hostinfo/data/ongoing',
                   value: attach_xmd ? true : false },
                 { op: 'add', path: '/hostinfo/data/css',
@@ -245,6 +252,8 @@ module Blockbridge
 
     def volume_hostinfo
       vol_cache_foreach do |v, vol|
+        pp v
+        pp vol
         next unless (vol_info = bb_lookup_vol_info(vol))
         volume_host_info_update(vol, vol_info)
       end
