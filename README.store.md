@@ -17,7 +17,7 @@ tools. Extended storage management functions are available using
 Blockbridge tools. The table below details the feature sets available
 using standard and extended APIs and tools.
 
-| Storage Feature          | Native         | Extended |
+| Storage Feature          | Standard         | Extended |
 | ------------------------ | :------------: | :-----------------: |
 | Create Volume            | Yes            | Yes |
 | Inspect Volume           | Yes            | Yes |
@@ -40,20 +40,20 @@ using standard and extended APIs and tools.
 
 ## Installing the Plugin
 
-### Requirement Parameters
+### Required Parameters
 These variables specify the address and authentication meterials
 needed for the plugin to communicate with the Blockbridge Storage API.
-- ````BLOCKBRIDGE_API_HOST```` 
-- ````BLOCKBRIDGE_API_KEY````
+- BLOCKBRIDGE_API_HOST 
+- BLOCKBRIDGE_API_KEY
 
-### Optional but Recommended
+### Recommended Parameters
 
 By default, Docker will associate each volume with the versioned name
 of the plugin that created it. This is known to present significant
 issues if you need to upgrade. We ***highly recommend*** using a
 plugin alias.
 
-- ````--alias blockbridge````
+- ''''--alias blockbridge''''
 
 ````
 $ docker plugin install --alias blockbridge blockbridge/volume-plugin \
