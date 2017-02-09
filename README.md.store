@@ -1,24 +1,13 @@
 # Blockbridge Volume Plugin for Docker
+The Blockbridge Volume Plugin integrates Docker with Blockbridge elastic block
+storage using the v2 Docker Plugin API.
 
-Version 4.0
+# Requirements
+Docker Version: 13.1+
+Blockbridge Version: 3.1+
 
-The Blockbridge volume driver integrates Docker with Blockbridge elastic block
-storage. Blockbridge enables tenant isolation, automated provisioning,
-encryption, secure deletion, snapshots and QoS for any storage backend: on
-local storage or with any storage vendor over any protocol.
-
-The Blockbridge volume driver implements the Docker volume plugin API, and runs
-as a container.
-
-The Blockbridge volume driver is a full-featured volume plugin for Docker,
-enabling multi-host access to block storage data volumes. Many functions are
-available through the native Docker API and command line tools. More advanced
-functionality is accessible via the API exposed by the Blockbridge Volume
-Driver and accompanying command lines tools.
-
-The table below presents the base feature list for 4.0 along with interface support guidelines.
-
-| Blockbridge Feature      | Via Docker API | Via Blockbridge API |
+# Features
+| Storage Feature          | Native         | Extended |
 | ------------------------ | :------------: | :-----------------: |
 | Create Volume            | Yes            | Yes |
 | Inspect Volume           | Yes            | Yes |
@@ -37,6 +26,27 @@ The table below presents the base feature list for 4.0 along with interface supp
 | Inspect Backup           | –              | Yes |
 | List Backups             | –              | Yes |
 | Remove Backup            | –              | Yes |
+
+The Blockbridge Volume Plugin implements the full Docker Volume API. The Blockbridge
+Volume Control Tools provide extended management capabilities as shown in the table
+above.
+
+
+The Blockbridge volume driver integrates Docker with Blockbridge elastic block
+storage. Blockbridge enables tenant isolation, automated provisioning,
+encryption, secure deletion, snapshots and QoS for any storage backend: on
+local storage or with any storage vendor over any protocol.
+
+
+
+The Blockbridge volume driver is a full-featured volume plugin for Docker,
+enabling multi-host access to block storage data volumes. Many functions are
+available through the native Docker API and command line tools. More advanced
+functionality is accessible via the API exposed by the Blockbridge Volume
+Driver and accompanying command lines tools.
+
+The table below presents the base feature list for 4.0 along with interface support guidelines.
+
 
 
 ## Quick Start
