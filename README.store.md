@@ -7,7 +7,7 @@ backup and restore capabilities.
 
 ## Software Requirements
 
-- Docker Version: ***13.1+***
+- Docker Version: ***1.13.1+***
 - Blockbridge Version: ***3.1+***
 
 ## Supported Features
