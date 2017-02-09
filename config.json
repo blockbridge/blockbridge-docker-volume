@@ -35,15 +35,15 @@
       "options": ["rshared", "rbind"]
     },
     {
-      "name": "sockets directory for docker.sock",
-      "description": "run directory for sockets for API access",
+      "name": "/run",
+      "description": "run directory for docker API access",
       "source": "/var/run",
       "destination": "/run",
       "type": "bind",
       "options": ["shared", "bind"]
     },
     {
-      "name": "iscsi",
+      "name": "etc iscsi",
       "description": "iscsi initiator configuration",
       "source": "/etc/iscsi",
       "destination": "/etc/iscsi",
