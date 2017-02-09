@@ -5,7 +5,7 @@
 VERSION_LEVEL  ?= 3.1
 VERSION_PATCH  ?= v1
 VERSION         = $(VERSION_LEVEL)-$(VERSION_PATCH)
-REGISTRY       ?= ""
+REGISTRY       ?= 
 NAMESPACE       = blockbridge
 PLUGIN_NAME     = volume-plugin
 PLUGIN_REPO     = $(REGISTRY)$(NAMESPACE)/$(PLUGIN_NAME)
@@ -17,7 +17,11 @@ VOLUMECTL_NAME  = volumectl
 VOLUMECTL_REPO  = $(REGISTRY)$(NAMESPACE)/$(VOLUMECTL_NAME)
 VOLUMECTL_TAG   = $(VERSION)
 
-all: plugin volumectl
+default: plugin volumectl
+
+build-all: driver driver-tag plugin plugin-create-all volumectl volumectl-tag
+
+release-all: driver-push plugin-push-all volumectl-push
 
 driver:
 	docker run -e USER=$(shell id -u) --rm -v $(PWD):/usr/src/app blockbridge/volume-driver-build
@@ -32,6 +36,8 @@ driver-push:
 	docker push $(DRIVER_REPO):$(DRIVER_TAG)
 	docker push $(DRIVER_REPO):$(VERSION_LEVEL)
 
+driver-all: driver driver-tag driver-push
+
 rootfs-tag:
 	docker tag blockbridge/volume-driver:latest blockbridge/volume-plugin-rootfs:latest
 
@@ -43,13 +49,31 @@ plugin: driver rootfs-tag
 	sudo mkdir -p plugin/rootfs/run/docker/plugins
 	sudo mkdir -p plugin/rootfs/bb/mnt
 	sudo chmod 777 plugin/rootfs/root
-	cp config.json plugin/.
+	cat config.json | jq -M '.env += [{"name":"VERSION","description":"plugin version","value":"$(VERSION)"}]' | sudo cp /dev/stdin plugin/config.json
 	docker rm -vf "$(ROOTFS_ID)"
 	docker rmi blockbridge/volume-plugin-rootfs
 
 plugin-create:
 	docker plugin rm -f $(PLUGIN_REPO):$(PLUGIN_TAG) || true
 	sudo docker plugin create $(PLUGIN_REPO):$(PLUGIN_TAG) plugin
+
+plugin-create-all:
+	docker plugin rm -f $(PLUGIN_REPO):$(PLUGIN_TAG) || true
+	docker plugin rm -f $(PLUGIN_REPO):$(VERSION_LEVEL) || true
+	docker plugin rm -f $(PLUGIN_REPO):latest || true
+	sudo docker plugin create $(PLUGIN_REPO):$(PLUGIN_TAG) plugin
+	sudo docker plugin create $(PLUGIN_REPO):$(VERSION_LEVEL) plugin
+	sudo docker plugin create $(PLUGIN_REPO):latest plugin
+
+plugin-push:
+	docker plugin push $(PLUGIN_REPO):$(PLUGIN_TAG) 
+
+plugin-push-all:
+	docker plugin push $(PLUGIN_REPO):$(PLUGIN_TAG) 
+	docker plugin push $(PLUGIN_REPO):$(VERSION_LEVEL) 
+	docker plugin push $(PLUGIN_REPO):latest
+
+plugin-all: plugin plugin-create plugin-push
 
 volumectl:
 	docker build -t $(VOLUMECTL_REPO) --build-arg VERSION=$(VERSION) -f volumectl/Dockerfile .
@@ -62,6 +86,8 @@ volumectl-push:
 	docker push $(VOLUMECTL_REPO):latest
 	docker push $(VOLUMECTL_REPO):$(VOLUMECTL_TAG)
 	docker push $(VOLUMECTL_REPO):$(VERSION_LEVEL)
+
+volumectl-all: volumectl volumectl-tag volumectl-push
 
 bundle:
 	rm -f .bundle/config

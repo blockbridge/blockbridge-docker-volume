@@ -68,7 +68,7 @@ class VolumeDriver
       @api    = VolumeDriver::Server.new
       @app    = Goliath::Rack::Builder.build(VolumeDriver::Server, api)
       @logger = VolumeDriver::Logger.new('blockbridge')
-      @logger.info "Blockbridge Volume Driver (version #{Blockbridge::VolumeDriverVersion::VERSION})"
+      @logger.info "Blockbridge Volume Driver #{Blockbridge::VolumeDriverVersion::VERSION}"
     end
 
     def run
