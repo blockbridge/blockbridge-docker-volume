@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 
-all: driver
+all: plugin-create pluginctl tag pluginctl-tag
 
 driver:
 	docker run -e USER=$(shell id -u) --rm -v $(PWD):/usr/src/app blockbridge/volume-driver-build
@@ -31,10 +31,10 @@ plugin-create: plugin
 	sudo docker plugin create blockbridge/plugin plugin
 
 pluginctl:
-	docker build -t blockbridge/pluginctl -f Dockerfile.pluginctl .
+	$(MAKE) -C pluginctl
 
 pluginctl-tag:
-	docker tag blockbridge/pluginctl:latest registry:5000/blockbridge/pluginctl:latest
+	$(MAKE) -C pluginctl pluginctl-tag
 
 bundle:
 	rm -f .bundle/config
@@ -45,5 +45,7 @@ nocache:
 
 readme:
 	@md-toc-filter README.md.raw > README.md
+
+.PHONY: pluginctl
 
 .NOTPARALLEL:
