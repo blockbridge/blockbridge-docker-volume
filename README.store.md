@@ -12,10 +12,10 @@ backup and restore capabilities.
 
 ## Supported Features
 
-Standard management functions are available using the native Docker
-tools. Extended storage management functions are available using the
-optional Blockbridge Volume Control container. The table below details
-the feature sets available using standard and extended APIs and tools.
+Standard management functions are available using native Docker
+tools. Extended storage management functions are available using
+Blockbridge tools. The table below details the feature sets available
+using standard and extended APIs and tools.
 
 | Storage Feature          | Native         | Extended |
 | ------------------------ | :------------: | :-----------------: |
@@ -39,17 +39,21 @@ the feature sets available using standard and extended APIs and tools.
 
 
 ## Installing the Plugin
-The Blockbridge Plugin is available on the Docker Hub and in the
-Docker Storage. The plugin will need 2 essential pieces of configuration.
 
 ### Requirement Parameters
+These variables specify the address and authentication meterials
+needed for the plugin to communicate with the Blockbridge Storage API.
 - BLOCKBRIDGE_API_HOST 
 - BLOCKBRIDGE_API_KEY
 
-These variables specify the address and authentication meterials
-needed for the plugin to communicate with the Blockbridge Storage API.
+### Optional but Recommended
 
-NOTE: It is ***essential** that you supply an alias when installing a plugin.
+By default, Docker will associate each volume with the versioned name
+of the plugin that created it. This is known to present significant
+issues if you need to upgrade. We ***highly recommend*** using a
+plugin alias.
+
+- ''''--alias blockbridge''''
 
 ````
 $ docker plugin install --alias blockbridge blockbridge/volume-plugin \
