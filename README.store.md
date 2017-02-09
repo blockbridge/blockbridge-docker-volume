@@ -41,7 +41,7 @@ using standard and extended APIs and tools.
 ## Installing the Plugin
 
 ### Required Parameters
-These variables specify the address and authentication meterials
+The following variables specify the address and authentication meterials
 needed for the plugin to communicate with the Blockbridge Storage API.
 - ````BLOCKBRIDGE_API_HOST ````
 - ````BLOCKBRIDGE_API_KEY````
@@ -59,5 +59,4 @@ plugin alias.
 $ docker plugin install --alias blockbridge blockbridge/volume-plugin \
   BLOCKBRIDGE_API_KEY="1/AZQ+qUfETE2ePp7kR5VOfzFjvaScCZ0iXPUF5uzES3oxlD6pR8RNDA" \
   BLOCKBRIDGE_API_HOST="10.10.10.10"
-
 ````
