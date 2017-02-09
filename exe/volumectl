@@ -16,7 +16,7 @@ require 'restclient/components'
 require 'uri'
 require 'excon'
 require 'pp'
-require 'pluginctl/cli'
+require 'volumectl/cli'
 
 class Command < Clamp::Command
   include Blockbridge::Results
@@ -109,7 +109,7 @@ class Command < Clamp::Command
           rescue
           end
         end
-        fail "Unable to connect to `blockbridge.sock`. Check that driver is running." unless @client
+        fail "Unable to connect to `blockbridge.sock`. Check that plugin driver is running." unless @client
       end
     end
 

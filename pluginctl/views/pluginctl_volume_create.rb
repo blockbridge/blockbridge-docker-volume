@@ -1,1 +1,0 @@
-pluginctl_volume_inspect.rb

@@ -9,3 +9,6 @@ RUN mkdir -p /bb/volumes
 COPY . /usr/src/app
 
 CMD ["./volume_driver.sh"]
+
+ARG VERSION
+ENV VERSION=$VERSION

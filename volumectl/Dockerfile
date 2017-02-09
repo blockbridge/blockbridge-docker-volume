@@ -1,7 +1,7 @@
 # Copyright (c) 2015-2017, Blockbridge Networks LLC.  All rights reserved.
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
-FROM blockbridge/pluginctl-base
+FROM blockbridge/volumectl-base
 MAINTAINER docker@blockbridge.com
 ENV PATH "$PATH:/usr/src/app/exe"
 
@@ -10,8 +10,8 @@ RUN bundle config --global frozen 1
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-COPY pluginctl/Gemfile /usr/src/app
-COPY pluginctl/Gemfile.lock /usr/src/app
+COPY volumectl/Gemfile /usr/src/app
+COPY volumectl/Gemfile.lock /usr/src/app
 
 COPY gem-cleaner.sh /gem-cleaner.sh
 RUN apk --no-cache add --virtual build-deps git bash bison gcc g++ git curl \
@@ -22,8 +22,11 @@ RUN apk --no-cache add --virtual build-deps git bash bison gcc g++ git curl \
     && /gem-cleaner.sh
 
 COPY exe /usr/src/app/exe
-COPY pluginctl /usr/src/app/pluginctl
+COPY volumectl /usr/src/app/volumectl
 COPY volume_driver/helpers /usr/src/app/volume_driver/helpers
 COPY volume_driver/help.rb /usr/src/app/volume_driver/help.rb
 
-ENTRYPOINT ["pluginctl"]
+ENTRYPOINT ["volumectl"]
+
+ARG VERSION
+ENV VERSION=$VERSION

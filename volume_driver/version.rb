@@ -4,6 +4,6 @@
 
 module Blockbridge
   module VolumeDriverVersion
-    VERSION = '4.0'
+    VERSION = ENV['VERSION'] || 'development'
   end
 end

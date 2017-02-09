@@ -1,1 +1,0 @@
-pluginctl_profile_inspect.rb

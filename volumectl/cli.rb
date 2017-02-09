@@ -3,7 +3,7 @@
 # in the LICENSE file.
 
 require 'blockbridge/util/tabular'
-require 'pluginctl/view'
+require 'volumectl/view'
 require 'volume_driver/helpers/errors'
 require 'securerandom'
 
