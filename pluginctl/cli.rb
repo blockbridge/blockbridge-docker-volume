@@ -3,9 +3,8 @@
 # in the LICENSE file.
 
 require 'blockbridge/util/tabular'
-require 'volume_driver/view'
+require 'pluginctl/view'
 require 'volume_driver/helpers/errors'
-require 'facets/string/word_wrap'
 require 'securerandom'
 
 class CliMain

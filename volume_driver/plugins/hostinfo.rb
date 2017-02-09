@@ -139,7 +139,10 @@ module Blockbridge
     def volume_host_info_build_fs(vol, vol_info, attach_xmd)
       return [] unless attach_xmd
       info = []
-      cmd = [ns_exec_mnt, 'df', '-kTh', mnt_path(vol[:name])]
+      cmd = ['df', '-kTh', mnt_path(vol[:name])]
+      unless ns_exec_mnt.empty?
+        cmd.unshift ns_exec_mnt
+      end
       res = cmd_exec_raw(*cmd, {})
 
       res.each_line do |l|

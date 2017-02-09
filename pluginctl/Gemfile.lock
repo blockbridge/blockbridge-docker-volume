@@ -1,0 +1,99 @@
+GIT
+  remote: /usr/lib/blockbridge-util
+  revision: e0d8102577b28546c47f0dea435ad76927d0741d
+  branch: master
+  specs:
+    blockbridge-util (1.2.0)
+      hashie (~> 3.4)
+      multi_json
+      naturally (~> 2.1)
+      paint
+      sys-filesystem (~> 1.1)
+
+GIT
+  remote: /usr/lib/clamp
+  revision: 8e459714e74cf9a7d4d1aab89125573383c5e548
+  branch: bb
+  specs:
+    clamp (1.0.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    activesupport (5.0.0.1)
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+      i18n (~> 0.7)
+      minitest (~> 5.1)
+      tzinfo (~> 1.1)
+    addressable (2.5.0)
+      public_suffix (~> 2.0, >= 2.0.2)
+    concurrent-ruby (1.0.4)
+    cookiejar (0.3.3)
+    domain_name (0.5.20161129)
+      unf (>= 0.0.5, < 1.0.0)
+    em-http-request (1.1.5)
+      addressable (>= 2.3.4)
+      cookiejar (!= 0.3.1)
+      em-socksify (>= 0.3)
+      eventmachine (>= 1.0.3)
+      http_parser.rb (>= 0.6.0)
+    em-socksify (0.3.1)
+      eventmachine (>= 1.0.0.beta.4)
+    em-synchrony (1.0.6)
+      eventmachine (>= 1.0.0.beta.1)
+    eventmachine (1.2.2)
+    excon (0.55.0)
+    ffi (1.9.17)
+    hashie (3.5.1)
+    http-cookie (1.0.3)
+      domain_name (~> 0.5)
+    http_parser.rb (0.6.0)
+    i18n (0.7.0)
+    jsonpath (0.5.8)
+      multi_json
+    mime-types (3.1)
+      mime-types-data (~> 3.2015)
+    mime-types-data (3.2016.0521)
+    minitest (5.9.1)
+    multi_json (1.12.1)
+    naturally (2.1.0)
+    netrc (0.11.0)
+    paint (2.0.0)
+    public_suffix (2.0.5)
+    rack (2.0.1)
+    require_all (1.4.0)
+    rest-client (2.0.0)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 4.0)
+      netrc (~> 0.8)
+    rest-client-components (1.4.0)
+      rack (>= 1.0.1)
+      rest-client (>= 1.6.0)
+    sys-filesystem (1.1.7)
+      ffi
+    thread_safe (0.3.5)
+    tzinfo (1.2.2)
+      thread_safe (~> 0.1)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  activesupport
+  blockbridge-util!
+  clamp!
+  concurrent-ruby (>= 1.0.4)
+  em-http-request
+  em-synchrony
+  excon (>= 0.46.0)
+  jsonpath
+  multi_json
+  require_all
+  rest-client
+  rest-client-components
+
+BUNDLED WITH
+   1.13.6

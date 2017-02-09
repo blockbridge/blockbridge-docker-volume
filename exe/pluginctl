@@ -6,6 +6,7 @@
 dev_lib = File.join(File.dirname(__FILE__), '..')
 $LOAD_PATH.unshift(dev_lib)
 $LOAD_PATH.unshift('/usr/src/app')
+$LOAD_PATH.unshift('/usr/local/bundle')
 
 require 'bundler/setup'
 require 'clamp'
@@ -15,7 +16,7 @@ require 'restclient/components'
 require 'uri'
 require 'excon'
 require 'pp'
-require 'volume_driver/cli'
+require 'pluginctl/cli'
 
 class Command < Clamp::Command
   include Blockbridge::Results

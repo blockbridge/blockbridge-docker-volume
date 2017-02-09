@@ -28,9 +28,7 @@ plugin: driver rootfs-tag
 
 plugin-create: plugin
 	docker plugin rm -f blockbridge/plugin:latest || true
-	docker plugin rm -f registry:5000/blockbridge/plugin:latest || true
 	sudo docker plugin create blockbridge/plugin plugin
-	sudo docker plugin create registry:5000/blockbridge/plugin plugin
 
 pluginctl:
 	docker build -t blockbridge/pluginctl -f Dockerfile.pluginctl .

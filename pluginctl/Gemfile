@@ -1,0 +1,20 @@
+# Copyright (c) 2015-2016, Blockbridge Networks LLC.  All rights reserved.
+# Use of this source code is governed by a BSD-style license, found
+# in the LICENSE file.
+#
+# -*- mode: ruby -*-
+  
+source 'https://rubygems.org'
+
+gem 'clamp', :git => '/usr/lib/clamp', :branch => 'bb'
+gem 'blockbridge-util', :git => '/usr/lib/blockbridge-util', :branch => 'master'
+gem 'rest-client'
+gem 'rest-client-components'
+gem 'em-http-request'
+gem 'em-synchrony'
+gem 'excon', '>= 0.46.0'
+gem 'require_all'
+gem 'multi_json'
+gem 'activesupport'
+gem 'jsonpath'
+gem 'concurrent-ruby', '>= 1.0.4'
