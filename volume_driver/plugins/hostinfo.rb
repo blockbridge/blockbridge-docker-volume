@@ -255,8 +255,6 @@ module Blockbridge
 
     def volume_hostinfo
       vol_cache_foreach do |v, vol|
-        pp v
-        pp vol
         next unless (vol_info = bb_lookup_vol_info(vol))
         volume_host_info_update(vol, vol_info)
       end
