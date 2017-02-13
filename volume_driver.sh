@@ -13,8 +13,8 @@
 trap '' TERM
 
 # setup environment
-export RUBYLIB=/usr/lib/blockbridge-ruby:/usr/lib/blockbridge-ruby/lib/ruby/2.3.0:/usr/lib/blockbridge-ruby/lib/ruby/2.3.0/x86_64-linux
-export PATH=/usr/lib/blockbridge-ruby/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/bb/bin:/usr/lib/blockbridge-ruby/bin:/usr/src/app/exe
+export RUBYLIB=/usr/lib/blockbridge-ruby:/usr/lib/blockbridge-ruby/bundle:/usr/lib/blockbridge-ruby/lib/ruby/2.3.0:/usr/lib/blockbridge-ruby/lib/ruby/2.3.0/x86_64-linux
+export PATH=/usr/lib/blockbridge-ruby/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/bb/bin
 
 # run blockbridge docker volume driver
 ROOTDIR=$(dirname $0)
