@@ -39,9 +39,10 @@ driver-push:
 driver-all: driver driver-tag driver-push
 
 rootfs-tag:
-	docker tag blockbridge/volume-driver:latest blockbridge/volume-plugin-rootfs:latest
+	docker pull blockbridge/volume-driver:latest-alpine
+	docker tag blockbridge/volume-driver:latest-alpine blockbridge/volume-plugin-rootfs:latest
 
-plugin: driver rootfs-tag
+plugin: rootfs-tag
 	$(eval ROOTFS_ID = $(shell docker create blockbridge/volume-plugin-rootfs:latest true))
 	sudo rm -rf plugin/rootfs
 	sudo mkdir -p plugin/rootfs
@@ -54,8 +55,8 @@ plugin: driver rootfs-tag
 	docker rmi blockbridge/volume-plugin-rootfs
 
 plugin-create:
-	docker plugin rm -f $(PLUGIN_REPO):$(PLUGIN_TAG) || true
-	sudo docker plugin create $(PLUGIN_REPO):$(PLUGIN_TAG) plugin
+	docker plugin rm -f $(PLUGIN_REPO):latest || true
+	sudo docker plugin create $(PLUGIN_REPO):latest plugin
 
 plugin-create-all:
 	docker plugin rm -f $(PLUGIN_REPO):$(PLUGIN_TAG) || true

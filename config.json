@@ -1,7 +1,7 @@
 {
   "description": "Blockbridge Volume Plugin",
   "documentation": "https://github.com/blockbridge/blockbridge-docker-volume",
-  "workdir": "/usr/src/app",
+  "workdir": "/usr/lib/blockbridge-docker-volume",
   "entrypoint": ["./volume_driver.sh"],
   "interface": {
     "types": ["docker.volumedriver/1.0"],
