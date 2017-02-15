@@ -43,6 +43,7 @@ GEM
       eventmachine (>= 1.0.0.beta.1)
     eventmachine (1.2.2)
     excon (0.55.0)
+    facets (3.1.0)
     ffi (1.9.17)
     hashie (3.5.1)
     http-cookie (1.0.3)
@@ -89,6 +90,7 @@ DEPENDENCIES
   em-http-request
   em-synchrony
   excon (>= 0.46.0)
+  facets (~> 3.0)
   jsonpath
   multi_json
   require_all

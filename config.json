@@ -43,14 +43,6 @@
       "options": ["shared", "bind"]
     },
     {
-      "name": "etc iscsi",
-      "description": "iscsi initiator configuration",
-      "source": "/etc/iscsi",
-      "destination": "/etc/iscsi",
-      "type": "bind",
-      "options": ["shared", "rbind"]
-    },
-    {
       "name": "kernel modules",
       "description": "kernel modules",
       "source": "/lib/modules",
