@@ -23,23 +23,25 @@ build-all: driver driver-tag plugin plugin-create-all volumectl volumectl-tag
 
 release-all: driver-push plugin-push-all volumectl-push
 
-driver:
+legacy-driver:
 	docker run -e USER=$(shell id -u) --rm -v $(PWD):/usr/src/app blockbridge/volume-driver-build
 	docker build -t $(DRIVER_REPO) --build-arg VERSION=$(VERSION) .
 
-driver-tag:
+legacy-driver-tag:
 	docker tag $(DRIVER_REPO):latest $(DRIVER_REPO):$(DRIVER_TAG)
 	docker tag $(DRIVER_REPO):latest $(DRIVER_REPO):$(VERSION_LEVEL)
 
-driver-push:
+legacy-driver-push:
 	docker push $(DRIVER_REPO):latest
 	docker push $(DRIVER_REPO):$(DRIVER_TAG)
 	docker push $(DRIVER_REPO):$(VERSION_LEVEL)
 
-driver-all: driver driver-tag driver-push
+legacy-driver-all: driver driver-tag driver-push
+
+driver-pull:
+	docker pull blockbridge/volume-driver:latest-alpine
 
 rootfs-tag:
-	docker pull blockbridge/volume-driver:latest-alpine
 	docker tag blockbridge/volume-driver:latest-alpine blockbridge/volume-plugin-rootfs:latest
 
 plugin: rootfs-tag
@@ -67,7 +69,7 @@ plugin-create-all:
 	sudo docker plugin create $(PLUGIN_REPO):latest plugin
 
 plugin-push:
-	docker plugin push $(PLUGIN_REPO):$(PLUGIN_TAG) 
+	docker plugin push $(PLUGIN_REPO):latest
 
 plugin-push-all:
 	docker plugin push $(PLUGIN_REPO):$(PLUGIN_TAG) 
