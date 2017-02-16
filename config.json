@@ -12,7 +12,7 @@
   },
   "args": null,
   "linux": {
-    "capabilities": ["CAP_IPC_LOCK", "CAP_IPC_OWNER", "CAP_NET_ADMIN", "CAP_SYS_ADMIN", "CAP_MKNOD"],
+    "capabilities": ["CAP_IPC_LOCK", "CAP_IPC_OWNER", "CAP_NET_ADMIN", "CAP_SYS_ADMIN", "CAP_MKNOD", "CAP_SYS_MODULE"],
     "allowAllDevices": true,
     "devices": null
   },
@@ -38,7 +38,7 @@
       "name": "/run",
       "description": "run directory for docker API access",
       "source": "/var/run",
-      "destination": "/run",
+      "destination": "/docker.run",
       "type": "bind",
       "options": ["shared", "bind"]
     },
@@ -52,6 +52,11 @@
     }
   ],
   "env": [
+    {
+      "name": "DOCKER_URL",
+      "description": "docker socket url",
+      "value": "unix:///docker.run/docker.sock"
+    },
     {
       "name": "BLOCKBRIDGE_ERROR_FORMAT",
       "description": "blockbridge cli error format",
