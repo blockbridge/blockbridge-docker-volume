@@ -3,7 +3,7 @@
 # in the LICENSE file.
 
 VERSION_LEVEL  ?= 3.1
-VERSION_PATCH  ?= v1
+VERSION_PATCH  ?= v2
 VERSION         = $(VERSION_LEVEL)-$(VERSION_PATCH)
 REGISTRY       ?= 
 NAMESPACE       = blockbridge
@@ -37,6 +37,10 @@ legacy-driver-push:
 	docker push $(DRIVER_REPO):$(VERSION_LEVEL)
 
 legacy-driver-all: driver driver-tag driver-push
+
+legacy-all: legacy-driver-all
+
+legacy: legacy-driver legacy-driver-tag
 
 driver-pull:
 	docker pull blockbridge/volume-driver:latest-alpine
