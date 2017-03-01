@@ -2,9 +2,9 @@ version: '2'
 
 services:
   blockbridge-volume-driver:
-    image: blockbridge/volume-driver:master
+    image: blockbridge/volume-driver:latest-alpine
     volumes:
-      - /run/docker/plugins/blockbridge:/run/docker/plugins/blockbridge
+      - /run/docker/plugins/blockbridge:/run/docker/plugins
       - blockbridge-volumes:/bb/volumes
       - blockbridge-iscsi:/var/lib/iscsi
       - /var/run/docker.sock:/run/docker.sock
@@ -19,6 +19,7 @@ services:
       com.docker.swarm.affinities: '["container!=*blockbridge-volume-driver*"]'
     environment:
       BLOCKBRIDGE_API_HOST: bbsim-mn
+      BLOCKBRIDGE_API_KEY:  1/Z6w+3/YW6nmf4n9IRxaXwwFVJ4ws/CAhdFD+40w3L4dHrD7f9hbrOA
 
 volumes:
   blockbridge-volumes:

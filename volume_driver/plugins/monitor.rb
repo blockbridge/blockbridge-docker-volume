@@ -9,6 +9,8 @@ module Blockbridge
     attr_reader :logger
     attr_reader :status
     attr_reader :cache_version
+    attr_reader :api_status
+    attr_reader :api_syndrome
 
     def self.cache
       @@cache
@@ -25,7 +27,12 @@ module Blockbridge
       ENV['BLOCKBRIDGE_MONITOR_INTERVAL_S'] || 10
     end
 
+    def status_interval_s
+      ENV['BLOCKBRIDGE_STATUS_INTERVAL_S'] || 15
+    end
+
     def run
+      EM::Synchrony.run_and_add_periodic_timer(status_interval_s, &method(:volume_api_status))
       EM::Synchrony.run_and_add_periodic_timer(monitor_interval_s, &method(:volume_cache_monitor_run))
     end
 
@@ -94,13 +101,26 @@ module Blockbridge
     end
 
     def volume_cache_monitor_run
-      volume_cache_monitor
+      volume_cache_monitor unless @api_status == :offline
     rescue Excon::Error => e
       logger.error "cache monitor request failed: #{e.message.chomp.squeeze("\n")}"
     rescue => e
       msg = e.message.chomp.squeeze("\n")
       msg.each_line do |m| logger.error "cache monitor: #{m.chomp}" end
       e.backtrace.each do |b| logger.error(b) end
+    end
+
+    def volume_api_status
+      bbapi.status.authorization
+      logger.info "STATUS: online" unless api_status == :online
+      @api_status   = :online
+      @api_syndrome = nil
+    rescue => e
+      syndrome = e.message.chomp.squeeze("\n")
+      logger.info "STATUS: offline (#{syndrome})" unless api_status == :offline &&
+                                                         api_syndrome == syndrome
+      @api_status   = :offline
+      @api_syndrome = syndrome
     end
   end
 end

@@ -53,34 +53,6 @@ fi
 [ "$setexit" != "" ] && exit $setexit
 
 ###########################################################
-# Check for docker versions
-###########################################################
-function vercmp()
-{
-    [ "$1" != "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
-}
-
-CLIENT_VERSION=$(docker version -f '{{.Client.Version}}' 2>&1)
-if [ $? -ne 0 ]; then
-    echo "Unable to determine docker client version. Make sure docker 1.8.0+ is installed."
-    command -v docker && echo "$(docker version)"
-    exit 1
-fi
-
-SERVER_VERSION=$(docker version -f '{{.Server.Version}}' 2>&1)
-if [ $? -ne 0 ]; then
-    echo "Unable to determine docker server version. Make sure docker 1.8.0+ is installed."
-    command -v docker && echo "$(docker version)"
-    exit 1
-fi
-
-if vercmp 1.8.0 $CLIENT_VERSION || vercmp 1.8.0 $SERVER_VERSION; then
-    echo "Docker version not supported. Please upgrade to docker 1.8.0+."
-    command -v docker && echo "$(docker version)"
-    exit 1
-fi
-
-###########################################################
 # Check for iscsid
 ###########################################################
 ISCSID=$(ps ax | egrep '/usr/sbin/iscsid|/bb/bin/iscsid' | grep -v grep)
@@ -111,7 +83,7 @@ docker run --name blockbridge-volume-driver                                     
            --volume blockbridge-iscsi:/var/lib/iscsi                                    \
            --volume blockbridge-volumes:/bb/volumes                                     \
            --volume /bb/env:/bb/env                                                     \
-           --volume /var/run/docker/plugins/blockbridge:/run/docker/plugins             \
+           --volume /run/docker/plugins/blockbridge:/run/docker/plugins             \
            --volume /var/run/docker.sock:/run/docker.sock                               \
            $DEVELOPMENT                                                                 \
            -e BLOCKBRIDGE_API_HOST=$BLOCKBRIDGE_API_HOST                                \

@@ -9,16 +9,14 @@ class API::Volume < Grape::API
   params do
     requires :name,         type: String,  desc: 'volume name'
     optional :profile,      type: String,  desc: 'volume profile'
-    optional :type,         type: String,  desc: 'volume type', volume_type: true
     optional :user,         type: String,  desc: 'volume user (owner)'
-    optional :otp,          type: String,  desc: 'volume one time password (OTP)'
-    optional :tls,          type: Boolean, desc: 'attach with TLS transport security'
-    optional :access_token, type: String,  desc: 'API access token for user authentication'
     optional :capacity,     type: String,  desc: 'volume capacity'
+    optional :type,         type: String,  desc: 'volume type'
     optional :iops,         type: Integer, desc: 'volume provisioning IOPS (QoS)'
-    optional :attributes,   type: String,  desc: 'volume attributes'
+    optional :transport,    type: String,  desc: 'specify transport security (tls, insecure)', transport_type: true
+    optional :otp,          type: String,  desc: 'volume one time password (OTP)'
+    optional :access_token, type: String,  desc: 'API access token for user authentication'
     optional :from_backup,  type: String,  desc: 'create volume from backup'
-    mutually_exclusive :profile, :type
   end
   post do
     status 201

@@ -53,6 +53,11 @@ class Command < Clamp::Command
 
   # global options
   option_group 'Global' do
+    # global options applicable to all commands
+    option(['-h', '--help'], :flag,
+           'print help (use --verbose to show hidden options)') do
+      request_help
+    end
     option('--verbose', :flag, 'enable verbose output')
     option('--debug', :flag, 'enable additional debug')
     option(['--raw', '-R'], :flag, 'enable raw output')
@@ -208,20 +213,20 @@ class Command < Clamp::Command
 end
 
 class CreateCommand < Command
-  option '--type', 'TYPE', 'volume type (autovol, autoclone, snappy)' do |val|
-    enum_check(val, %w(autovol autoclone snappy))
-  end
-  option '--user', 'USER', 'volume owner'
-  option '--access-token', 'TOKEN', 'API access token for user authentication'
-  option '--capacity', 'CAPACITY', 'request volume capacity (bytes, N GiB, etc.)'
-  option '--iops', 'IOPS', 'requested service IOPS'
-  option '--transport', 'TRANSPORT', 'requested transport (tls, insecure, etc.)' do |val|
-    enum_check(val, %w(tls insecure))
-  end
-  option '--from-backup', 'BACKUP', 'create disk from backup'
+  option '--type', 'TYPE', 'storage service type'
+  option '--capacity', 'CAPACITY', 'volume capacity (bytes, N GiB, etc.)'
+  option '--iops', 'IOPS', 'volume IOPS (provisioned service types only)'
 
-  def default_type
-    'autovol' if user
+  option_group 'Security' do
+    option '--user', 'USER', 'volume owner (tenant account)'
+    option '--transport', 'TRANSPORT', 'network transport (tls, insecure, etc.)'
+    option '--access-token', 'TOKEN', 'API access token for volume management' do |v|
+      enum_check(v, %w(tls insecure))
+    end
+  end
+
+  option_group 'Clone' do
+    option '--from-backup', 'BACKUP', 'clone from object storage (object_store/label)'
   end
 
   def create_params
@@ -229,9 +234,9 @@ class CreateCommand < Command
       h[:name]         = uri_name(name)
       h[:type]         = type
       h[:user]         = user
-      h[:access_token] = access_token
       h[:capacity]     = capacity
       h[:iops]         = iops
+      h[:access_token] = access_token
       h[:transport]    = transport
       h[:attributes]   = attributes.join(' ') if attributes.length > 0
       h[:from_backup]  = from_backup

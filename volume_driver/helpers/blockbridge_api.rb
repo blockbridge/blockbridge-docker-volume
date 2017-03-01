@@ -193,6 +193,7 @@ module Helpers
           h[:capacity] = volume_params[:capacity]
         end
         h[:iops] = volume_params[:iops] if volume_params[:iops]
+        h[:template] = volume_params[:type] if volume_params[:type]
         h.merge(parse_tag_query(volume_params[:attributes])) if volume_params[:attributes]
       end
 
@@ -204,10 +205,10 @@ module Helpers
           xref:  volume_ref_name,
         },
         disk: {
-          create:         true,
-          label:          vol_name,
-          xref:           volume_ref_name,
-          xmd_refs:       [ volume_ref_name ],
+          create:   true,
+          label:    vol_name,
+          xref:     volume_ref_name,
+          xmd_refs: [ volume_ref_name ],
         },
         xmd: {
           create:      true,
