@@ -234,12 +234,14 @@ module Helpers
         v = vol_cache_get(vol_name)
         {
           Name:       params_name || v[:name],
-          Mountpoint: mnt_path_map(v[:name])
+          Mountpoint: mnt_path_map(v[:name]),
+          Status:     v,
         }
-      elsif (v = volume_lookup.first)
+      elsif (v = volume_lookup_one)
         {
           Name:       params_name || v[:name],
-          Mountpoint: mnt_path_map(v[:name])
+          Mountpoint: mnt_path_map(v[:name]),
+          Status:     v,
         }
       end
     end
