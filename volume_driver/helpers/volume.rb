@@ -15,7 +15,6 @@ module Helpers
             "BLOCKBRIDGE_CACHE_REF"      => vol_cache_ref,
             "BLOCKBRIDGE_HOSTINFO_REF"   => vol_hostinfo_ref,
             "BLOCKBRIDGE_VOLUME_PARAMS"  => volume_params_json,
-            "BLOCKBRIDGE_VOLUME_TYPE"    => volume_type,
             "BLOCKBRIDGE_VOLUME_PATH"    => vol_path,
             "BLOCKBRIDGE_MOUNT_PATH"     => mnt_path,
             "BLOCKBRIDGE_MODULES_EXPORT" => "1",
@@ -55,14 +54,14 @@ module Helpers
 
     def vol_param_keys
       [
-        :type,
         :user,
-        :access_token,
-        :transport,
         :capacity,
-        :attributes,
+        :type,
         :iops,
+        :attributes,
+        :transport,
         :from_backup,
+        :access_token,
       ]
     end
 
@@ -88,15 +87,6 @@ module Helpers
         end
     end
 
-    def volume_type
-      return unless defined? params
-      @volume_type ||=
-        begin
-          raise Blockbridge::NotFound, "No volume type found; specify volume type or volume profile" if volume_params[:type].nil?
-          volume_params[:type]
-        end
-    end
-
     def volume_profile
       return unless defined? params
       @volume_profile ||=
@@ -111,13 +101,11 @@ module Helpers
     end
 
     def volume_params_opts
-      opts = params_opts
-      if opts && params_type
+      if (opts = params_opts)
         h = Hash.new.tap do |h|
           vol_param_keys.each do |p|
             h[p] = opts[p] if opts.has_key?(p)
           end
-          h[:type] = params_type
         end
         h
       end
@@ -221,7 +209,7 @@ module Helpers
     end
 
     def volume_list
-      volume_info.select { |v| !v.has_key?(:deleted) }.map do |v|
+      volume_info(true).select { |v| !v.has_key?(:deleted) }.map do |v|
         {
           Name:       v[:name],
           Mountpoint: mnt_path(v[:name])
@@ -269,11 +257,7 @@ module Helpers
 
     def volume_bb_remove
       logger.info "#{vol_name} removing..."
-      if volume_type == "autoclone"
-        volume_cmd_exec("bb_remove", "-c")
-      else
-        volume_cmd_exec("bb_remove")
-      end
+      volume_cmd_exec("bb_remove")
       logger.info "#{vol_name} removed"
     end
 

@@ -22,7 +22,7 @@ module Blockbridge
     end
 
     def monitor_interval_s
-      ENV['BLOCKBRIDGE_MONITOR_INTERVAL_S'] || 10
+      ENV['BLOCKBRIDGE_MONITOR_INTERVAL_S'] || 5
     end
 
     def run

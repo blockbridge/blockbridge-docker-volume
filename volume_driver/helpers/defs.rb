@@ -130,16 +130,6 @@ module Helpers
       return params.deep_symbolize_keys
     end
 
-    def params_type
-      # return type if specified as parameter
-      return params[:type] unless params[:type].nil?
-      return params['Opts']['type'] unless params['Opts'].nil? || params['Opts']['type'].nil?
-
-      # set default type. But not if profile. And only if other params set
-      return if params_profile
-      return 'autovol' unless ((vol_param_keys - params_opts.keys) == vol_param_keys)
-    end
-
     def params_parse_s3(str)
       return unless str
       if str.include? '/'
