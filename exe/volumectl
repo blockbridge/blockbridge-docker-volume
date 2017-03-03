@@ -78,7 +78,6 @@ class Command < Clamp::Command
     end
   end
 
-
   def default_base_url
     "#{api_proto}://#{api_host}:#{api_port}"
   end
@@ -93,6 +92,10 @@ class Command < Clamp::Command
 
   def verbose?
     !!(ENV['BLOCKBRIDGE_VERBOSE'].to_i != 0 || ARGV.index('--verbose'))
+  end
+
+  def version
+    ENV['VERSION'] || '3.x.development'
   end
 
   # client class
@@ -383,10 +386,17 @@ class BackupCommand < Command
   subcommand 'info', 'list S3 object store info', BackupInfo
 end
 
+class VersionCommand < Command
+  def exec
+    puts version
+  end
+end
+
 class VolumeControl < Command
   subcommand 'volume', 'manage volumes', VolumeCommand
   subcommand 'profile', 'manage volume profiles', ProfileCommand
   subcommand 'backup', 'manage volume backups', BackupCommand
+  subcommand 'version', 'volumectl version', VersionCommand
 end
 
 if __FILE__ == $0
