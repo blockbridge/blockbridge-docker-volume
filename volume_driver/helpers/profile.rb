@@ -14,6 +14,12 @@ module Helpers
 
     def profile_create
       logger.info "#{vol_name} profile creating..."
+
+      # ensure user exists
+      user = bbapi.user_profile.list(login: params[:user])&.first
+      raise Blockbridge::NotFound unless user
+
+      # create profile
       data = Hash.new.tap do |h|
         h[:name] = params[:name]
         vol_param_keys.each do |p|
@@ -23,6 +29,8 @@ module Helpers
       res = bbapi.xmd.create(ref: profile_ref_name, data: { profile: data })
       logger.info "#{vol_name} profile created"
       res&.dig('data', 'profile')
+    rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound, Blockbridge::Api::NotFoundError
+      raise Blockbridge::NotFound, "User #{params[:user]} does not exist."
     rescue Blockbridge::Api::ConflictError
       raise Blockbridge::Conflict, "Profile #{params[:name]} already exists."
     end
