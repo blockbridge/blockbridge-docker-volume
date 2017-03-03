@@ -83,7 +83,7 @@ docker run --name blockbridge-volume-driver                                     
            --volume blockbridge-iscsi:/var/lib/iscsi                                    \
            --volume blockbridge-volumes:/bb/volumes                                     \
            --volume /bb/env:/bb/env                                                     \
-           --volume /run/docker/plugins/blockbridge:/run/docker/plugins             \
+           --volume /run/docker/plugins/blockbridge:/run/docker/plugins                 \
            --volume /var/run/docker.sock:/run/docker.sock                               \
            $DEVELOPMENT                                                                 \
            -e BLOCKBRIDGE_API_HOST=$BLOCKBRIDGE_API_HOST                                \
