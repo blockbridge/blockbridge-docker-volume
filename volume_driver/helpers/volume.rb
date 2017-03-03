@@ -79,6 +79,7 @@ module Helpers
 
     def volume_user
       return unless defined? params
+      return if env['REQUEST_URI'].start_with? '/profile'
       @volume_user ||=
         begin
           raise Blockbridge::NotFound, "No volume user found; specify user or volume profile" if volume_params[:user].nil?
@@ -89,6 +90,7 @@ module Helpers
 
     def volume_profile
       return unless defined? params
+      return if env['REQUEST_URI'].start_with? '/profile'
       @volume_profile ||=
         begin
           name = params_profile || 'default'
@@ -131,6 +133,7 @@ module Helpers
 
     def volume_params
       return unless defined? params
+      return if env['REQUEST_URI'].start_with? '/profile'
       return if vol_cache_enabled?(vol_name)
       @volume_params ||=
         begin
@@ -272,6 +275,7 @@ module Helpers
 
     def volume_access_token
       return unless defined? params
+      return if env['REQUEST_URI'].start_with? '/profile'
       # if otp specified, use session token. Either auth login to create one or use valid one.
       # - if can't SU, then it will fail. RETURN good error here saying can't SU
       #
