@@ -102,12 +102,16 @@ module Helpers
       Blockbridge::Config.api_host || ENV['BLOCKBRIDGE_API_HOST']
     end
 
+    def api_host_filtered
+      api_host&.sub(/:[^:]+$/, '').sub(/^\[/, '').sub(/\]$/,'')
+    end
+
     def api_host_url
-      "https://#{Resolv.getaddress(api_host)}/api"
+      "https://#{api_host}/api"
     end
 
     def api_host_internal_url
-      "https://#{Resolv.getaddress(api_host)}:9999/api"
+      "https://#{api_host_filtered}:9999/api"
     end
 
     def api_url(access_token = nil)
