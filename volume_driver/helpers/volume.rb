@@ -184,7 +184,7 @@ module Helpers
       if vol_name.nil?
         info = bbapi(nil, nil).xmd.list.select { |x| x[:ref].include? volume_ref_prefix }
       else
-        info = bbapi(nil, nil).xmd.info(volume_ref_name)
+        info = [ bbapi(nil, nil).xmd.info(volume_ref_name) ]
       end
       volume_info_map(info, raw)
     rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound, Blockbridge::Api::NotFoundError
