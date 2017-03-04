@@ -16,7 +16,7 @@ module Helpers
       logger.info "#{vol_name} profile creating..."
 
       # ensure user exists
-      user = bbapi.user_profile.list(login: params[:user])&.first
+      user = bbapi(nil, nil).user_profile.list(login: params[:user])&.first
       raise Blockbridge::NotFound unless user
 
       # create profile
@@ -26,7 +26,7 @@ module Helpers
           h[p] = params[p] if params[p]
         end
       end
-      res = bbapi.xmd.create(ref: profile_ref_name, data: { profile: data })
+      res = bbapi(nil, nil).xmd.create(ref: profile_ref_name, data: { profile: data })
       logger.info "#{vol_name} profile created"
       res&.dig('data', 'profile')
     rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound, Blockbridge::Api::NotFoundError
@@ -37,7 +37,7 @@ module Helpers
 
     def profile_remove
       logger.info "#{vol_name} profile removing..."
-      bbapi.xmd.remove(profile_ref_name)
+      symbolize bbapi(nil, nil).xmd.remove(profile_ref_name)
       logger.info "#{vol_name} profile removed"
     rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound, Blockbridge::Api::NotFoundError
       raise Blockbridge::NotFound, "Profile #{params[:name]} not found."
@@ -45,10 +45,12 @@ module Helpers
 
     def profile_info(name = nil)
       if name.nil?
-        bbapi.xmd.list.select { |x| x[:ref].include? profile_ref_prefix }.map { |x| x.dig('data', 'profile') }
+        symbolize bbapi(nil, nil).xmd.list.select { |x| x[:ref].include? profile_ref_prefix }.map { |x| x.dig('data', 'profile') }
       else
-        [ bbapi.xmd.info(profile_ref_name)&.dig('data', 'profile') ]
+        symbolize [ bbapi(nil, nil).xmd.info("#{profile_ref_prefix}#{name}")&.dig('data', 'profile') ]
       end
+    rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound, Blockbridge::Api::NotFoundError
+      raise Blockbridge::NotFound, "Profile #{name} not found."
     end
   end
 end

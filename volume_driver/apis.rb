@@ -40,7 +40,6 @@ class API::VolumeDriver < Grape::API
   rescue_from Blockbridge::CommandError do |e|
     msg = e.message.chomp.squeeze("\n")
     msg.each_line do |m| env.logger.error(m.chomp) end
-    e.backtrace.each do |b| env.logger.error(b) end
     error!({ Error: e.message }, 400)
   end
 

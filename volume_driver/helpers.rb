@@ -15,6 +15,7 @@ require_rel 'helpers/*.rb'
 
 # Helpers
 module Helpers
+  include Helpers::General
   include Helpers::Params
   include Helpers::Volume
   include Helpers::Profile

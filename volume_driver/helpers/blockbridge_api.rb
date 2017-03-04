@@ -258,6 +258,7 @@ module Helpers
       }
       bbapi.xmd.update(volume_ref_name, xmd_params)
     rescue Blockbridge::Api::ExecutionError => e
+      raise Blockbridge::ResourcesUnavailable, "#{vol_name} service provision: #{e.message}" if e.message =~ /resources are unavailable/
       raise Blockbridge::CommandError, e.message
     end
   end

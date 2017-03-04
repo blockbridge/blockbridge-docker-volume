@@ -82,8 +82,10 @@ module Helpers
       return if env['REQUEST_URI'].start_with? '/profile'
       @volume_user ||=
         begin
-          raise Blockbridge::NotFound, "No volume user found; specify user or volume profile" if volume_params[:user].nil?
-          cmd_exec("bb -k user info --user #{volume_params[:user]} -X login -X serial --tabular", profile_env)
+          raise Blockbridge::NotFound, "No volume user found (and no default profile?); specify user or volume profile" if volume_params[:user].nil?
+          user = bbapi(nil, nil).user_profile.list(login: volume_params[:user])&.first
+          raise Blockbridge::NotFound, "Volume user #{volume_params[:user]} does not exist." unless user
+          logger.info "#{vol_name} using user #{user.login} #{user.serial}"
           volume_params[:user]
         end
     end
@@ -180,13 +182,13 @@ module Helpers
 
     def volume_info(raw = false)
       if vol_name.nil?
-        select = "|d| d[:ref].include?(\"#{volume_ref_prefix}\")"
+        info = bbapi(nil, nil).xmd.list.select { |x| x[:ref].include? volume_ref_prefix }
       else
-        select = "|d| d[:ref] == \"#{volume_ref_prefix}#{vol_name}\""
+        info = bbapi(nil, nil).xmd.info(volume_ref_name)
       end
-      cmd = "bb -k xmd info --process 'puts MultiJson.dump(data.select { #{select} })'"
-      info = profile_cmd_exec(cmd)
       volume_info_map(info, raw)
+    rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound, Blockbridge::Api::NotFoundError
+      []
     end
 
     def volume_lookup(raw = false)
