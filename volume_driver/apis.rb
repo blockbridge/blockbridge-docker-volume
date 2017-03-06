@@ -37,6 +37,10 @@ class API::VolumeDriver < Grape::API
     error!({ Error: e.message }, 400)
   end
 
+  rescue_from Blockbridge::ValidationError do |e|
+    error!({ Error: e.message}, 400)
+  end
+
   rescue_from Blockbridge::CommandError do |e|
     msg = e.message.chomp.squeeze("\n")
     msg.each_line do |m| env.logger.error(m.chomp) end

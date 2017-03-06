@@ -24,4 +24,5 @@ module Blockbridge
   class VolumeInuse < Error; end
   class RuntimeError < Error; end
   class RuntimeSuccess < Error; end
+  class ValidationError < Error; end
 end

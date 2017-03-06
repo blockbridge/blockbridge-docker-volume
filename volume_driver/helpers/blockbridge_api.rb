@@ -260,6 +260,17 @@ module Helpers
     rescue Blockbridge::Api::ExecutionError => e
       raise Blockbridge::ResourcesUnavailable, "#{vol_name} service provision: #{e.message}" if e.message =~ /resources are unavailable/
       raise Blockbridge::CommandError, e.message
+    rescue Blockbridge::Api::ValidationError => e
+      e.errors.each do |v|
+        if v[:field] =~ /capacity/
+          raise Blockbridge::CommandError, "Capacity not specified. Please specify capacity or set in profile."
+        end
+      end
+      err=[]
+      e.errors.each do |v|
+        err.push "#{v[:field]} #{v[:msg]}"
+      end
+      raise Blockbridge::ValidationError, err.join(', ')
     end
   end
 end
