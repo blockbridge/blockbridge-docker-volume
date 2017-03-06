@@ -16,6 +16,9 @@ DRIVER_TAG      = $(VERSION)
 VOLUMECTL_NAME  = volumectl
 VOLUMECTL_REPO  = $(REGISTRY)$(NAMESPACE)/$(VOLUMECTL_NAME)
 VOLUMECTL_TAG   = $(VERSION)
+VALIDATE_NAME   = plugin-test
+VALIDATE_REPO   = $(REGISTRY)$(NAMESPACE)/$(VALIDATE_NAME)
+VALIDATE_TAG    = $(VERSION)
 
 default: plugin volumectl
 
@@ -36,9 +39,7 @@ legacy-driver-push:
 	docker push $(DRIVER_REPO):$(DRIVER_TAG)
 	docker push $(DRIVER_REPO):$(VERSION_LEVEL)
 
-legacy-driver-all: driver driver-tag driver-push
-
-legacy-all: legacy-driver-all
+legacy-all: legacy-driver legacy-driver-tag legacy-driver-push
 
 legacy: legacy-driver legacy-driver-tag
 
@@ -96,6 +97,9 @@ volumectl-push:
 
 volumectl-all: volumectl volumectl-tag volumectl-push
 
+plugin-test:
+	docker build -t $(VALIDATE_REPO) --build-arg VERSION=$(VERSION) -f plugin-test/Dockerfile plugin-test
+
 bundle:
 	rm -f .bundle/config
 	docker run -e USER=$(shell id -u) --rm -v $(PWD):/usr/src/app blockbridge/volume-driver-build bash -c 'bundle && bundle update blockbridge-api && bundle update heroics'
@@ -103,6 +107,6 @@ bundle:
 readme:
 	@md-toc-filter README.md.raw > README.md
 
-.PHONY: volumectl
+.PHONY: volumectl plugin-test
 
 .NOTPARALLEL:

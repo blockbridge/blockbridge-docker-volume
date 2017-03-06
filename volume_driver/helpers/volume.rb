@@ -165,9 +165,9 @@ module Helpers
     def volume_info_map(info, raw = false)
       info.map do |xmd|
         next unless (v = xmd[:data][:volume])
+        v[:hosts] = volume_hosts(xmd) if volume_hosts(xmd).length > 0
+        v[:deleted] = xmd[:data][:deleted] if xmd[:data][:deleted]
         unless raw
-          v[:hosts] = volume_hosts(xmd) if volume_hosts(xmd).length > 0
-          v[:deleted] = xmd[:data][:deleted] if xmd[:data][:deleted]
           v.delete(:scope_token)
         end
         v
@@ -186,7 +186,7 @@ module Helpers
       else
         info = [ bbapi(nil, nil).xmd.info(volume_ref_name) ]
       end
-      volume_info_map(info, raw)
+      volume_info_map(symbolize(info), raw)
     rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound, Blockbridge::Api::NotFoundError
       []
     end
@@ -214,7 +214,7 @@ module Helpers
     end
 
     def volume_list
-      volume_info(true).select { |v| !v.has_key?(:deleted) }.map do |v|
+      volume_info.select { |v| !v.has_key?(:deleted) }.map do |v|
         {
           Name:       v[:name],
           Mountpoint: mnt_path(v[:name])
