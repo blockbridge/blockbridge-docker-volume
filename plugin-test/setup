@@ -54,7 +54,7 @@ done
 # Install Simulator to serve as backend
 ###########################################################
 echo "Installing Blockbridge container as storage backend..."
-#curl https://manage.blockbridge.com/install/simulator.up | sh
+curl https://get.blockbridge.com/container | sh
 
 echo "Retrieving backend system credentials..."
 export BLOCKBRIDGE_API_HOST=${DOCKER_IP}

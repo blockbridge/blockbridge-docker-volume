@@ -69,5 +69,7 @@ echo "Remove volume"
 ###########################################################
 unset CONSTRAINT
 swarm-exec.sh docker volume ls
+export CONSTRAINT="node.labels.testnode==testnode-0"
 swarm-exec.sh docker volume rm testvol
+unset CONSTRAINT
 swarm-exec.sh docker volume ls
