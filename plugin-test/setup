@@ -1,0 +1,80 @@
+#!/bin/bash
+###########################################################
+# Volume Plugin Validation Tests Setup
+###########################################################
+
+###########################################################
+# shell options
+###########################################################
+set -e
+
+###########################################################
+# trap handlers 
+###########################################################
+on_exit()
+{
+    res=$?
+
+    echo
+
+    if [ $res -ne 0 ]; then
+        ERROR_CMD=$(eval echo "$BASH_COMMAND")
+        if [ -n "$ERROR_CMD" ]; then
+            echo "ERROR: command failed: $ERROR_CMD"
+        fi
+    fi
+
+    return $res
+}
+
+trap on_exit EXIT
+
+###########################################################
+# ensure we are on swarm master
+###########################################################
+swarm-exec.sh echo
+
+###########################################################
+# get swarm nodes
+###########################################################
+SWARM_NODES=($(docker node inspect -f '{{ .Description.Hostname }}' $(docker node ls -q)))
+if [ ${#SWARM_NODES[@]} -eq 0 ]; then
+    echo "No swarm nodes found; make sure docker client is pointing at the docker swarm mode master" && exit 1
+fi
+
+###########################################################
+# label swarm nodes
+###########################################################
+for (( i=0; i < ${#SWARM_NODES[@]}; i++ )); do
+    docker node update --label-rm  testnode ${SWARM_NODES[$i]} || true
+    docker node update --label-add testnode=testnode-$i ${SWARM_NODES[$i]}
+done
+
+###########################################################
+# Install Simulator to serve as backend
+###########################################################
+echo "Installing Blockbridge container as storage backend..."
+#curl https://manage.blockbridge.com/install/simulator.up | sh
+
+echo "Retrieving backend system credentials..."
+export BLOCKBRIDGE_API_HOST=${DOCKER_IP}
+export BLOCKBRIDGE_API_KEY=$(docker exec bbsim-converged cat /bb/data/etc/system.api.token)
+
+echo "Updating networks to add NAT address..."
+bbcli="docker run --rm --net=host -e HOME -e BLOCKBRIDGE_API_HOST -e BLOCKBRIDGE_API_KEY -v $HOME:$HOME -w $HOME -u $(id -u) blockbridge/cli bb -k"
+for net in $($bbcli net info -X uuid); do
+    $bbcli net update --net $net --nat-addr $BLOCKBRIDGE_API_HOST
+done
+
+echo "Retrieving backend docker credentials..."
+export BLOCKBRIDGE_API_KEY=$(docker exec bbsim-converged cat /bb/data/etc/docker.api.token)
+
+[ -n "$BLOCKBRIDGE_API_HOST" ] && echo "Backend host: $BLOCKBRIDGE_API_HOST" || exit 1
+[ -n "$BLOCKBRIDGE_API_KEY"  ] && echo "Backend keys: $BLOCKBRIDGE_API_KEY" || exit 1
+
+###########################################################
+# tests
+###########################################################
+echo "Installing plugin on each swarm node..."
+swarm-exec.sh docker plugin rm -f blockbridge || true
+swarm-exec.sh docker plugin install --alias blockbridge blockbridge/volume-plugin:latest --grant-all-permissions BLOCKBRIDGE_API_HOST=$BLOCKBRIDGE_API_HOST BLOCKBRIDGE_API_KEY=$BLOCKBRIDGE_API_KEY

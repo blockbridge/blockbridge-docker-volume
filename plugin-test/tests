@@ -1,0 +1,73 @@
+#!/bin/bash
+###########################################################
+# Volume Plugin Validation Tests
+###########################################################
+
+###########################################################
+# shell options
+###########################################################
+set -e
+
+###########################################################
+# trap handlers 
+###########################################################
+on_exit()
+{
+    res=$?
+
+    echo
+
+    if [ $res -ne 0 ]; then
+        ERROR_CMD=$(eval echo "$BASH_COMMAND")
+        if [ -n "$ERROR_CMD" ]; then
+            echo "ERROR: command failed: $ERROR_CMD"
+        fi
+    fi
+
+    return $res
+}
+
+trap on_exit EXIT
+
+###########################################################
+# ensure we are on swarm master
+###########################################################
+swarm-exec.sh docker pull blockbridge/swarm-exec:17.03.0-ce
+swarm-exec.sh echo
+
+###########################################################
+echo "Single-node tests"
+###########################################################
+export CONSTRAINT="node.labels.testnode==testnode-0"
+swarm-exec.sh docker volume create --driver blockbridge --name testvol
+swarm-exec.sh docker volume ls
+swarm-exec.sh docker run --rm -v testvol:/data alpine df -k /data
+swarm-exec.sh docker run --rm -v testvol:/data alpine sh -c 'echo testdata > /data/foo.txt'
+swarm-exec.sh docker run --rm -v testvol:/data alpine cat /data/foo.txt
+swarm-exec.sh docker run --rm -v testvol:/data alpine dd if=/dev/urandom of=/data/random bs=1M count=200
+swarm-exec.sh docker run --rm -v testvol:/data alpine sh -c 'md5sum /data/random > /data/checksum.txt && cat /data/checksum.txt'
+swarm-exec.sh docker run --rm -v testvol:/data alpine md5sum -c /data/checksum.txt
+swarm-exec.sh docker run --rm -v testvol:/data alpine sh -c 'cat /data/foo.txt && md5sum -c /data/checksum.txt'
+
+##########################################################
+echo "Multi-node tests"
+###########################################################
+export CONSTRAINT="node.labels.testnode==testnode-1"
+swarm-exec.sh docker volume ls
+swarm-exec.sh docker run --rm -v testvol:/data alpine df -k /data
+swarm-exec.sh docker run --rm -v testvol:/data alpine cat /data/foo.txt
+swarm-exec.sh docker run --rm -v testvol:/data alpine sh -c 'cat /data/foo.txt && md5sum -c /data/checksum.txt'
+
+export CONSTRAINT="node.labels.testnode==testnode-2"
+swarm-exec.sh docker volume ls
+swarm-exec.sh docker run --rm -v testvol:/data alpine df -k /data
+swarm-exec.sh docker run --rm -v testvol:/data alpine cat /data/foo.txt
+swarm-exec.sh docker run --rm -v testvol:/data alpine sh -c 'cat /data/foo.txt && md5sum -c /data/checksum.txt'
+
+##########################################################
+echo "Remove volume"
+###########################################################
+unset CONSTRAINT
+swarm-exec.sh docker volume ls
+swarm-exec.sh docker volume rm testvol
+swarm-exec.sh docker volume ls

@@ -81,6 +81,8 @@ plugin-push-all:
 	docker plugin push $(PLUGIN_REPO):$(VERSION_LEVEL) 
 	docker plugin push $(PLUGIN_REPO):latest
 
+plugin-all-all: plugin plugin-create-all plugin-push-all
+
 plugin-all: plugin plugin-create plugin-push
 
 volumectl:

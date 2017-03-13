@@ -1,3 +1,4 @@
 plugin
+plugin-test
 *.sw*
 .git
