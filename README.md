@@ -44,7 +44,8 @@ The table below presents the base feature list along with interface support guid
 ## Quick Start
 
 ````
-$ docker plugin install --alias blockbridge blockbridge/volume-plugin BLOCKBRIDGE_API_HOST="YOUR HOST" BLOCKBRIDGE_API_KEY="YOUR KEY"
+$ docker plugin install --alias blockbridge blockbridge/volume-plugin BLOCKBRIDGE_API_HOST="YOUR HOST" \
+    BLOCKBRIDGE_API_KEY="YOUR KEY"
 ````
 
 The plugin requires two environment variables to be set: `BLOCKBRIDGE_API_HOST` to point to the Blockbridge backend, and `BLOCKBRIDGE_API_KEY` as the access token to be used. For a quick-start, use the Blockbridge Storage Container as your backend. Please see [https://github.com/blockbridge/blockbridge-simulator](https://github.com/blockbridge/blockbridge-simulator) for the Blockbridge container quick-start setup.
