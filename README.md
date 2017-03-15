@@ -67,8 +67,7 @@ The plugin requires two environment variables to be set: `BLOCKBRIDGE_API_HOST` 
             - [From Backup](#from-backup)
             - [OTP](#otp)
             - [Attribute based provisioning](#attribute-based-provisioning)
-    - [Volume backup](#volume-backup)
-    - [Volume restore](#volume-restore)
+    - [Volume Create Examples](#volume-create-examples)
     - [Create a volume in Docker (in-band)](#create-a-volume-in-docker-in-band)
         - [Docker volume create (Explicit)](#docker-volume-create-explicit)
         - [Docker volume create (Implicit)](#docker-volume-create-implicit)
@@ -85,6 +84,8 @@ The plugin requires two environment variables to be set: `BLOCKBRIDGE_API_HOST` 
         - [Inspect one Profile](#inspect-one-profile)
         - [Full command help](#full-command-help)
     - [Volume Backups](#volume-backups)
+        - [Volume backup](#volume-backup)
+        - [Volume restore](#volume-restore)
         - [List backups](#list-backups)
         - [Inspect backup](#inspect-backup)
         - [Remove backup](#remove-backup)
@@ -154,7 +155,9 @@ create options that make specifying the options easier as a group. See below
 for full description. The Blockbridge Storage Container creates a `default`
 profile.
 
-Option name: **profile**
+If a default profile exists, this parameter is Optional.
+
+Parameter name: **profile**
 
 #### User
 
@@ -222,21 +225,33 @@ volume.
 
 Parameter name: **attributes**
 
-## Volume backup
-
-Backup a volume with the volume driver
+## Volume Create Examples
 
 ````
-$ volumectl backup testvol
+$ volumectl volume create --name vol1 --user default --capacity 32GiB --type gp
+== Volume: vol1
+type                  gp     
+user                  default
+capacity              32GiB  
 ````
 
-## Volume restore
-
-Restore a volume that was backed up. Use standard volume create options with a backup source specified.
+````
+$ volumectl volume create --name vol2 --user default --capacity 32GiB --type provisioned --iops 10000
+== Volume: vol2
+type                  piops  
+user                  default
+capacity              100GiB 
+iops                  10000
+````
 
 ````
-$ volumectl volume create --name testvol-restore --from-backup testvol-backup
-````
+$ volumectl volume create --name vol3 --user default --capacity 1TiB --type piops --iops 20000
+== Volume: vol3
+type                  piops  
+user                  default
+capacity              1TiB   
+iops                  20000
+
 
 ## Create a volume in Docker (in-band)
 
@@ -358,8 +373,29 @@ Blockbridge volumes are accessible on any host, with no data copy required.
 
 ## Volume Backups
 
-Backups are managed directly via the Blockbridge volume driver. Specify a volume profile
-to manage backups for, or with none specified the default is used.
+Backup any volume directly to any S3-compatible object store. Your filesystem
+is frozen, a snapshot is taken, and your block device is converted to objects.
+All operations take place on the Blockbridge backend, so your backup is taken
+directly from your data. No host dependencies are required, and if your host
+crashes during your backup, the backup still takes place successfully.  Backups
+are managed directly via the Blockbridge volume driver. Specify a volume
+profile to manage backups for, or with none specified the default is used.
+
+### Volume backup
+
+Backup a volume with the volume driver
+
+````
+$ volumectl backup testvol
+````
+
+### Volume restore
+
+Restore a volume that was backed up. Use standard volume create options with a backup source specified.
+
+````
+$ volumectl volume create --name testvol-restore --from-backup testvol-backup
+````
 
 ### List backups
 List backups for default profile.
