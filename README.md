@@ -2,8 +2,6 @@
 
 [![Try it now](https://www.blockbridge.com/wp-content/uploads/2017/03/bb-container-wire-256x256.png?raw=true)](https://blockbridge.com/container/)
 
-[![solarized dualmode](https://github.com/altercation/solarized/raw/master/img/solarized-yinyang.png)](#features)
-
 Version 3.1
 
 The Blockbridge volume plugin is available as a "Managed Docker Plugin" for
