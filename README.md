@@ -1,5 +1,7 @@
 # Blockbridge Volume Plugin for Docker
 
+[![Try it now](https://www.blockbridge.com/wp-content/uploads/2017/03/docker-certified-plugin-blue-256x256.png?raw=true)][https://blockbridge.com/container/]
+
 Version 3.1
 
 The Blockbridge volume plugin is available as a "Managed Docker Plugin" for
