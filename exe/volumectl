@@ -112,12 +112,14 @@ class Command < Clamp::Command
       socket_dirs.each do |dir|
         Dir[dir].each do |path|
           begin
-            @client ||= Excon.new('unix:///', :socket => File.join(path, 'blockbridge.sock'),
-                                  :headers => { 'Content-Type' => 'application/json' })
+            @client = Excon.new('unix:///', :socket => File.join(path, 'blockbridge.sock'),
+                                :headers => { 'Content-Type' => 'application/json' })
+            @client.get
           rescue
+            @client = nil
           end
         end
-        fail "Unable to connect to `blockbridge.sock`. Check that plugin driver is running." unless @client
+        fail "Unable to connect to `blockbridge.sock`. Check that the blockbridge volume plugin is running." unless @client
       end
     end
 
@@ -223,9 +225,7 @@ class CreateCommand < Command
   option_group 'Security' do
     option '--user', 'USER', 'volume owner (tenant account)'
     option '--transport', 'TRANSPORT', 'network transport (tls, insecure, etc.)'
-    option '--access-token', 'TOKEN', 'API access token for volume management' do |v|
-      enum_check(v, %w(tls insecure))
-    end
+    option '--access-token', 'TOKEN', 'API access token for volume management'
   end
 
   option_group 'Clone' do
