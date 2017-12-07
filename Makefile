@@ -51,27 +51,27 @@ rootfs-tag:
 
 plugin: rootfs-tag
 	$(eval ROOTFS_ID = $(shell docker create blockbridge/volume-plugin-rootfs:latest true))
-	sudo rm -rf plugin/rootfs
-	sudo mkdir -p plugin/rootfs
-	docker export "$(ROOTFS_ID)" | sudo tar -x -C plugin/rootfs
-	sudo mkdir -p plugin/rootfs/run/docker/plugins
-	sudo mkdir -p plugin/rootfs/bb/mnt
-	sudo chmod 777 plugin/rootfs/root
-	cat config.json | jq -M '.env += [{"name":"VERSION","description":"plugin version","value":"$(VERSION)"}]' | sudo cp /dev/stdin plugin/config.json
+	sudo rm -rf /tmp/plugin/rootfs
+	sudo mkdir -p /tmp/plugin/rootfs
+	docker export "$(ROOTFS_ID)" | sudo tar -x -C /tmp/plugin/rootfs
+	sudo mkdir -p /tmp/plugin/rootfs/run/docker/plugins
+	sudo mkdir -p /tmp/plugin/rootfs/bb/mnt
+	sudo chmod 777 /tmp/plugin/rootfs/root
+	cat config.json | jq -M '.env += [{"name":"VERSION","description":"plugin version","value":"$(VERSION)"}]' | sudo cp /dev/stdin /tmp/plugin/config.json
 	docker rm -vf "$(ROOTFS_ID)"
 	docker rmi blockbridge/volume-plugin-rootfs
 
 plugin-create:
 	docker plugin rm -f $(PLUGIN_REPO):latest || true
-	sudo docker plugin create $(PLUGIN_REPO):latest plugin
+	sudo docker plugin create $(PLUGIN_REPO):latest /tmp/plugin
 
 plugin-create-all:
 	docker plugin rm -f $(PLUGIN_REPO):$(PLUGIN_TAG) || true
 	docker plugin rm -f $(PLUGIN_REPO):$(VERSION_LEVEL) || true
 	docker plugin rm -f $(PLUGIN_REPO):latest || true
-	sudo docker plugin create $(PLUGIN_REPO):$(PLUGIN_TAG) plugin
-	sudo docker plugin create $(PLUGIN_REPO):$(VERSION_LEVEL) plugin
-	sudo docker plugin create $(PLUGIN_REPO):latest plugin
+	sudo docker plugin create $(PLUGIN_REPO):$(PLUGIN_TAG) /tmp/plugin
+	sudo docker plugin create $(PLUGIN_REPO):$(VERSION_LEVEL) /tmp/plugin
+	sudo docker plugin create $(PLUGIN_REPO):latest /tmp/plugin
 
 plugin-push:
 	docker plugin push $(PLUGIN_REPO):latest
