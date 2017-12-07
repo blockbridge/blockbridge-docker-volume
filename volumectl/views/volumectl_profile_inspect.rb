@@ -12,7 +12,7 @@ def info(pro)
     field 'type', pro['type']
     field 'user', pro['user']
     field 'capacity', pro['capacity']
-    transport_str = pro['transport'].to_s.empty? ? 'insecure' : profile['transport']
+    transport_str = pro['transport'].to_s.empty? ? 'insecure' : pro['transport']
     field 'transport', transport_str
     field 'attributes', pro['attributes']
   end
