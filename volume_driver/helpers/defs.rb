@@ -95,7 +95,13 @@ module Helpers
     end
 
     def system_access_token
+      return unless ENV['BLOCKBRIDGE_GLOBAL_TOKEN'] == "1"
       Blockbridge::Config.access_token || ENV['BLOCKBRIDGE_API_KEY'] || access_token_default
+    end
+
+    def user_access_token
+      return if ENV['BLOCKBRIDGE_GLOBAL_TOKEN'] == "1"
+      ENV['BLOCKBRIDGE_API_KEY'] || access_token_default
     end
 
     def api_host

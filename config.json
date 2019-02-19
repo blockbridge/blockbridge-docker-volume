@@ -73,8 +73,24 @@
       "value": "1"
     },
     {
+      "name": "BLOCKBRIDGE_LOGGER_TIMESTAMP",
+      "description": "prefix log messages with a timestamp",
+      "value": "0",
+      "Settable": [
+        "value"
+      ]
+    },
+    {
+      "name": "BLOCKBRIDGE_GLOBAL_TOKEN",
+      "description": "api key specified is global token; set to 1 to SU to users with one token",
+      "value": "0",
+      "Settable": [
+        "value"
+      ]
+    },
+    {
       "name": "BLOCKBRIDGE_API_HOST",
-      "description": "blockbridge api host (management node)",
+      "description": "blockbridge api host (controlplane)",
       "value": "unset",
       "Settable": [
         "value"

@@ -40,6 +40,8 @@ module Helpers
     def access_token(user_token)
       if user_token
         user_token
+      elsif user_access_token
+        user_access_token
       else
         system_access_token
       end
@@ -52,7 +54,7 @@ module Helpers
     def client_params(user, user_token, otp)
       Hash.new.tap do |p|
         p[:user] = user || ''
-        if user && (user_token.nil? || user_token == system_access_token)
+        if user && user_access_token.nil? && (user_token.nil? || user_token == system_access_token)
           p[:default_headers] = {
             'X-Blockbridge-SU' => user,
           }
@@ -160,11 +162,12 @@ module Helpers
     end
 
     def bb_lookup_user(user)
+      return unless user
       raise Blockbridge::NotFound if bbapi.user_profile.list(login: user).length == 0
     end
 
     def bb_lookup_vol_info(vol)
-      bb_lookup_user(vol[:user])
+      bb_lookup_user(vol[:user]) if vol[:user]
       info = bbapi.xmd.info("docker-volume-#{vol[:name]}")
       info[:data].merge(info[:data][:volume])
     rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound, Blockbridge::Api::NotFoundError
@@ -218,7 +221,7 @@ module Helpers
           xmd_refs:    [ vol_cache_ref, vol_hostinfo_ref ],
           exists_ok:   true,
           reservation: true,
-          publish:     true,
+          publish:     ENV['BLOCKBRIDGE_GLOBAL_TOKEN'] == "1",
           data: {
             group: {
               _schema:  "group",
@@ -245,19 +248,22 @@ module Helpers
       # create the vss
       vss = bbapi.vss.create(vss_params)
 
-      # setup scoped authorization for async remove
-      authz_params = {
-        scope: "v:o=#{vss.id} v:r=manage_targets v:r=manage_profiles v:r=remove_vss v:r=manage_internal_disks",
-        xref:  volume_ref_name,
-      }
-      authz = bbapi.authorization.create(authz_params)
+      # if an auth unrestricted token is available; create a volume scoped token
+      if bbapi.status.authorization&.dig('permissions','user','rights','manage_authorizations')
+        # setup scoped authorization for async remove
+        authz_params = {
+          scope: "v:o=#{vss.id} v:r=manage_targets v:r=manage_profiles v:r=remove_vss v:r=manage_internal_disks",
+          xref:  volume_ref_name,
+        }
+        authz = bbapi.authorization.create(authz_params)
 
-      # patch in the authz to the volume definition
-      xmd_params = {
-        mode: 'patch',
-        data: [ { op: 'add', path: '/volume/scope_token', value: authz.access_token } ],
-      }
-      bbapi.xmd.update(volume_ref_name, xmd_params)
+        # patch in the authz to the volume definition
+        xmd_params = {
+          mode: 'patch',
+          data: [ { op: 'add', path: '/volume/scope_token', value: authz.access_token } ],
+        }
+        bbapi.xmd.update(volume_ref_name, xmd_params)
+      end
     rescue Blockbridge::Api::ExecutionError => e
       raise Blockbridge::ResourcesUnavailable, "#{vol_name} service provision: #{e.message}" if e.message =~ /resources are unavailable/
       raise Blockbridge::CommandError, e.message

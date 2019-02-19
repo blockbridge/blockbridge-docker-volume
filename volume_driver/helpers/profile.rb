@@ -16,8 +16,10 @@ module Helpers
       logger.info "#{vol_name} profile creating..."
 
       # ensure user exists
-      user = bbapi(nil, nil).user_profile.list(login: params[:user])&.first
-      raise Blockbridge::NotFound unless user
+      unless user_access_token
+        user = bbapi(nil, nil).user_profile.list(login: params[:user])&.first
+        raise Blockbridge::NotFound unless user
+      end
 
       # create profile
       data = Hash.new.tap do |h|
