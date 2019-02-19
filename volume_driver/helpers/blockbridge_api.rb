@@ -3,6 +3,7 @@
 # in the LICENSE file.
 
 require 'blockbridge/api'
+require 'moneta'
 
 module Helpers
   module BlockbridgeApi
