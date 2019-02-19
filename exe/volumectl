@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (c) 2015-2017, Blockbridge Networks LLC.  All rights reserved.
+# Copyright (c) 2015-2019, Blockbridge Networks LLC.  All rights reserved.
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 
@@ -95,7 +95,7 @@ class Command < Clamp::Command
   end
 
   def version
-    ENV['VERSION'] || '3.x.development'
+    ENV['VERSION'] || '4.x.development'
   end
 
   # client class
@@ -115,6 +115,7 @@ class Command < Clamp::Command
             @client = Excon.new('unix:///', :socket => File.join(path, 'blockbridge.sock'),
                                 :headers => { 'Content-Type' => 'application/json' })
             @client.get
+            break
           rescue
             @client = nil
           end
@@ -125,6 +126,7 @@ class Command < Clamp::Command
 
     def initialize(prefix)
       client_connect
+
       @prefix = prefix
     end
 
