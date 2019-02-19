@@ -25,10 +25,10 @@ GIT
 
 GIT
   remote: /usr/lib/clamp
-  revision: 8e459714e74cf9a7d4d1aab89125573383c5e548
-  branch: bb
+  revision: 2fa2beaff9842228932f6ed84802f0a97c657fbe
+  branch: bb2
   specs:
-    clamp (1.0.0)
+    clamp (1.2.1)
 
 GIT
   remote: /usr/lib/heroics
@@ -190,10 +190,11 @@ DEPENDENCIES
   grape!
   hashie
   heroics!
+  moneta (~> 0.8)
   posix-spawn
   require_all
   rest-client
   rest-client-components
 
 BUNDLED WITH
-   1.13.6
+   2.0.1
