@@ -54,11 +54,21 @@ class VolumeDriver
   class Logger < Log4r::Logger
     def initialize(name)
       super(name)
-      pattern = "%d %-7l %c -- %m\n"
-      datefmt = "%Y-%m-%dT%H:%M:%S.%3N"
-      format  = Log4r::PatternFormatter.new(pattern: pattern, date_pattern: datefmt)
-      stdout  = Log4r::StdoutOutputter.new('console', :formatter => format)
+      if logger_timestamp == "1"
+        pattern = "%d %-7l %c -- %m\n"
+        datefmt = "%Y-%m-%dT%H:%M:%S.%3N"
+        format  = Log4r::PatternFormatter.new(pattern: pattern, date_pattern: datefmt)
+        stdout  = Log4r::StdoutOutputter.new('console', :formatter => format)
+      else
+        pattern = "%-7l %c -- %m\n"
+        format  = Log4r::PatternFormatter.new(pattern: pattern)
+        stdout  = Log4r::StdoutOutputter.new('console', :formatter => format)
+      end
       add(stdout)
+    end
+
+    def logger_timestamp
+      ENV['BLOCKBRIDGE_LOGGER_TIMESTAMP'] || "1"
     end
   end
 

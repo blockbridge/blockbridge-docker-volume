@@ -80,6 +80,7 @@ module Helpers
     def volume_user
       return unless defined? params
       return if env['REQUEST_URI'].start_with? '/profile'
+      return if user_access_token
       @volume_user ||=
         begin
           raise Blockbridge::NotFound, "No volume user found (and no default profile?); specify user or volume profile" if volume_params[:user].nil?
@@ -295,8 +296,11 @@ module Helpers
           token = get_session_token(otp)
         else
           if volume_params[:access_token]
-            # login otp with user access token
+            # login otp with volume access token
             bbapi(nil, volume_params[:access_token], otp)
+          elsif user_access_token
+            # login otp with user access token
+            bbapi(nil, user_access_token, otp)
           else
             # login otp with system token and SU
             bbapi(volume_user, system_access_token, otp)
@@ -306,6 +310,8 @@ module Helpers
       else
         if volume_params[:access_token]
           token = volume_params[:access_token]
+        elsif user_access_token
+          token = user_access_token
         else
           token = system_access_token
         end

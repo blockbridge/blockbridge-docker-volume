@@ -2,10 +2,10 @@
 # Use of this source code is governed by a BSD-style license, found
 # in the LICENSE file.
 
-VERSION_LEVEL  ?= 3.1
-VERSION_PATCH  ?= v2
+VERSION_LEVEL  ?= 4.3
+VERSION_PATCH  ?= v1
 VERSION         = $(VERSION_LEVEL)-$(VERSION_PATCH)
-REGISTRY       ?= 
+REGISTRY       ?=
 NAMESPACE       = blockbridge
 PLUGIN_NAME     = volume-plugin
 PLUGIN_REPO     = $(REGISTRY)$(NAMESPACE)/$(PLUGIN_NAME)

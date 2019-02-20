@@ -30,6 +30,7 @@ module Blockbridge
       logger.debug "Configuring authentication"
       net = bbapi.net.list({}).first
       return unless net[:nat_addr]
+      return unless bbapi.status.authorization&.dig('permissions','user','rights','manage_authorizations')
       authz = bbapi.authorization.create({})
       status = bbapi.status.authorization
       @@access_token = authz[:access_token]
