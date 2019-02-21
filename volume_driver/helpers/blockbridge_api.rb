@@ -167,7 +167,7 @@ module Helpers
     end
 
     def bb_lookup_vol_info(vol)
-      bb_lookup_user(vol[:user]) if vol[:user]
+      bb_lookup_user(vol[:user]) if vol[:user] && !user_access_token
       info = bbapi.xmd.info("docker-volume-#{vol[:name]}")
       info[:data].merge(info[:data][:volume])
     rescue Excon::Errors::NotFound, Excon::Errors::Gone, Blockbridge::NotFound, Blockbridge::Api::NotFoundError

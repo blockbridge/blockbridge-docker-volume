@@ -118,7 +118,10 @@ module Helpers
 
     def volume_params_find
       if volume_profile
-        profile = volume_profile.reject { |k, v| k == :name }
+        profile = volume_profile.reject { |k, v|
+          k == :name ||
+          (k == :user && user_access_token)
+        }
         logger.info "#{vol_name} using volume info from profile #{volume_profile[:name]}: #{profile}"
         profile
       else
